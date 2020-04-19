@@ -25,6 +25,7 @@ export default class AuthController{
                 code: "user:login.success"
             })
         }else{
+            ctx.status = 401;
             ctx.rest({
                 code: "auth:fail:password",
                 reason: "password"
