@@ -7,7 +7,7 @@ function getCache(){
   if(db){
     return db;
   }
-  return level('/cache');
+  return level('./cache');
 }
 
 export  function putKey(key:string, value:string):Promise<string>{
