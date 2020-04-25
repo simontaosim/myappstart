@@ -7,13 +7,25 @@ import {
     VersionColumn,
     DeleteDateColumn,
     ManyToOne,
-    JoinColumn
+    JoinColumn,
+    AfterUpdate,
+    AfterRemove,
 } from "typeorm";
 import { Role } from "./Role";
 
 @Entity()
 export class Permission {
+    @AfterUpdate()
+    updateCounters() {
+      console.log("此处更新role");
+      
+    }
 
+    @AfterRemove()
+    removeRole(){
+        console.log("此时删除了role");
+        
+    }
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -32,11 +44,19 @@ export class Permission {
     @Column({ default: false })
     remove: boolean;
 
-    @ManyToOne(type=> Role, role => role.permissions, { onDelete: 'SET NULL' })
-    @JoinColumn({ name: "roleId" })
+    @Column({default: false})
+    isDefault: boolean;
+
+    @Column({default: false})
+    grant: boolean;
+
+    @ManyToOne(type=> Role, role => role.permissions, { onDelete: 'CASCADE', onUpdate: "CASCADE"  })
+    @JoinColumn({
+        name: "roleId",
+    })
     role: Role;
 
-    @Column("int", { nullable: true })
+    @Column("int", { nullable: true})
     roleId: number;
 
     @UpdateDateColumn()
@@ -50,5 +70,17 @@ export class Permission {
 
     @DeleteDateColumn()
     deletedDate: Date;
+
+    @Column("simple-json", {nullable: true})
+    acl: {
+       write: {
+        roles: number[],
+        users: number[]
+       },
+       read: {
+        roles: number[],
+        users: number[]
+       }
+    }
 
 }

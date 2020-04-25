@@ -5,15 +5,15 @@ import { Post } from "../../entity/Post";
 import { Permission } from "../../entity/Permission";
 import  * as bcrypt from 'bcrypt';
 
-interface IListQuerySort {
+export interface IListQuerySort {
     [x: string]: 1 | "ASC" | "DESC" | -1;
 }
 
-interface IListFilter {
+export interface IListFilter {
     [x: string]: string | Array<number>;
 }
 
-interface IListQuery  {
+export interface IListQuery  {
     skip: number;
     take: number;
     sort:  IListQuerySort
@@ -34,28 +34,28 @@ export default class RestService{
         switch (this.resource) {
             case 'users':
                 this.repository = connection.getRepository(User);
-                this.listSelect = ['id', 'username', 'createdDate', 'updatedDate'];
+                this.listSelect = ['id', 'username', 'createdDate', 'updatedDate', 'acl'];
                 this.detailSelect = ['id', 'username', 'createdDate', 'updatedDate'];
-                this.relations = ['roles']
                 this.searchSelect = ['username'];
                 break;
             case 'roles':
                 this.repository = connection.getRepository(Role);
-                this.listSelect = ['id', 'name', 'isDefault', 'createdDate', 'updatedDate'];
-                this.detailSelect = ['id', 'name', 'createdDate', 'updatedDate'];
+                this.listSelect = ['id', 'name',"name_zh","acl",  'isDefault', 'createdDate', 'updatedDate'];
+                this.detailSelect = ['id', 'name', 'name_zh', 'createdDate', 'updatedDate'];
                 this.searchSelect = ['name'];
                 
                 break;
             case "posts":
                 this.repository = connection.getRepository(Post);
-                this.listSelect = ['id', 'title', "authorId", 'createdDate', 'updatedDate'];
-                this.detailSelect = ['id', 'title', "body",  "authorId", 'createdDate', 'updatedDate'];
+                this.listSelect = ['id', 'title', "authorId", 'acl', 'createdDate', 'updatedDate'];
+                this.detailSelect = ['id', 'title', "body",'acl',  "authorId", 'createdDate', 'updatedDate'];
                 this.searchSelect = ['title', 'body'];
                 break;
             case "permissions":
                 this.repository = connection.getRepository(Permission);
-                this.listSelect = ['id', 'resource', 'roleId', 'get', 'post', 'put', 'remove']
-                this.detailSelect = ['id', 'resource', 'roleId', 'get', 'post', 'put', 'remove'];
+                this.listSelect = ['id', 'resource','acl',"roleId",  'get', 'post', 'put', 'remove', 'grant','createdDate', 'updatedDate',]
+                this.detailSelect = ['id', 'resource', 'get', 'post',"roleId", 'put', 'remove', 'grant'];
+
                 break;
             default:
                 throw("NO_RESOURCE_FOUND");
@@ -84,7 +84,6 @@ export default class RestService{
             conditions.push({...filter})
         }
         try {
-            console.log(sort);
             const instances = await  this.repository.find({
                 where: conditions,
                 select: this.listSelect,
@@ -126,7 +125,7 @@ export default class RestService{
                     relations: this.relations
                 }
             });
-            console.log(instance);
+            console.log({instance});
             
             return instance;
         } catch (e) {
@@ -157,17 +156,32 @@ export default class RestService{
     async update(id:number, params: object){
         try {
             const updateRlt = await this.repository.update(id, { ...params });
+            console.log({updateRlt});
+            
             return updateRlt;
         } catch (e) {
             throw e;
         }
     }
+
     async remove(id:number){
         try {
             const removeRlt = await this.repository.softDelete(id);
             return removeRlt;
         } catch (e) {
-        
+            throw e;
+        }
+    }
+
+    async removeMany(ids: number[]){
+        console.log(ids);
+        try {
+            const removeRlt = await this.repository.softDelete(ids);
+           
+            return removeRlt;
+            
+        } catch (e) {
+            throw e;
         }
     }
 

@@ -10,6 +10,7 @@ import {
     OneToMany,
     DeleteDateColumn,
     Unique,
+    RelationId,
 } from "typeorm";
 
 import { Role } from './Role';
@@ -33,9 +34,15 @@ import { Post } from "./Post";
     
     @CreateDateColumn()
     createdDate: Date;
+
+    @Column({default: false})
+    isDefault: boolean
     
     @VersionColumn()
     version: number;
+
+    @RelationId((user: User) => user.roles)
+    roleIds: number[]
 
     @ManyToMany(Type => Role, { onDelete: 'SET NULL' })
     @JoinTable()
@@ -46,5 +53,17 @@ import { Post } from "./Post";
 
     @DeleteDateColumn()
     deletedDate: Date;
+
+    @Column("simple-json", {nullable: true})
+    acl: {
+        write: {
+         roles: number[],
+         users: number[]
+        },
+        read: {
+         roles: number[],
+         users: number[]
+        }
+     }
 }
 

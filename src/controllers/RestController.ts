@@ -2,8 +2,45 @@ import * as koa from 'koa';
 
 import { httpGet, httpPost, httpPut, httpDelete } from '../decorators/HttpRoutes';
 import RestService from '../services/daos/RestService';
+import DefaultResourceService from '../services/daos/DefaultResourceService';
 
 export default class RestController{
+
+    @httpDelete('/:resource')
+    async removeMany(ctx: koa.Context){
+        const { resource } = ctx.params;
+        let {filter, range, sort} = ctx.query;
+        filter = filter? JSON.parse(filter) : {};
+       if(filter.id){
+           const restService = new RestService(resource, ctx.DBConnection);
+           const defaultResourceService = new DefaultResourceService(ctx.DBConnection);
+           const defaultIds = await defaultResourceService.getDefaultResource(resource);
+           for (let index = 0; index < defaultIds.length; index++) {
+               const defaultId = defaultIds[index];
+               if(filter.id.includes(defaultId)){
+                   ctx.status = 403;
+                   return ctx.body = {
+                       code: `delete:fail`,
+                       reason: 'default resources can not deleted'
+                   };
+                //    break;
+               }
+           }
+           await restService.removeMany(filter.id);
+           return ctx.rest({
+               data: {
+                   id: filter.id,
+               }
+           });
+       }else{
+           return ctx.rest({
+               data: {
+                   ids: [],
+               }
+           })
+       }
+    }
+
     @httpGet('/:resource')
     async list (ctx: koa.Context) {
         const { resource  } = ctx.params;
@@ -66,7 +103,14 @@ export default class RestController{
             const { resource, id } = ctx.params;
             const restService = new RestService(resource, ctx.DBConnection);
             const data = await restService.one(id);
-            ctx.rest(data);
+            if(!data){
+                ctx.status = 404;
+                ctx.rest({
+                    code: "not found"
+                });
+            }else{
+                ctx.rest(data);
+            }
         
         } catch (e) {
             throw e;

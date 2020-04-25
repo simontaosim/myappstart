@@ -32,6 +32,7 @@
       "level-rocksdb": "^4.0.0",
       "mochawesome": "^5.0.0",
       "node-fetch": "^2.6.0",
+      "pg": "^8.0.3",
       "reflect-metadata": "^0.1.10",
       "sqlite3": "^4.0.3",
       "typeorm": "0.2.24",
@@ -41,6 +42,7 @@
       "dev-server": "NODE_ENV=development ts-node-dev --respawn --transpileOnly  src/index.ts",
       "test": "NODE_ENV=test mocha   --reporter mochawesome",
       "seed-dev": "ts-node ./node_modules/typeorm-seeding/dist/cli.js  seed  -c 'development'",
-      "dev": "yarn seed-dev && yarn dev-server"
+      "dev": "yarn seed-dev && yarn dev-server",
+      "clear": "NODE_ENV=development typeorm schema:drop -c 'development'"
    }
 }

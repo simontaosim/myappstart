@@ -11,8 +11,15 @@ import { Connection } from 'typeorm';
 import restful from './middles/restful';
 import resourceAccess from './middles/resourceAccess';
 import tokenParse from './middles/tokenParse';
+import guard from './middles/guard';
+import PermissionController from './controllers/PermissionController';
 
-@registerController([AuthController, RestController ])//the later has less prioritites
+@registerController(
+    [
+        PermissionController,
+        AuthController, 
+        RestController 
+    ])//the later has less prioritites
 export default class App{
     private server:koa<koa.DefaultState, koa.DefaultState>;
     public router: Router<any, {}>;
@@ -31,9 +38,12 @@ export default class App{
         this.server.use(koaBody());
         this.server.use(tokenParse);
         this.server.use(resourceAccess);
+        this.server.use(guard);
         this.server.use(restful);
         
         this.server.use(this.router.routes()).use(this.router.allowedMethods());
+        console.log(this.router);
+        
         this.server.listen(8080, ()=>{
             console.log('server start at', 8080);
         })

@@ -44,5 +44,17 @@ import { User } from "./User";
     @DeleteDateColumn()
     deletedDate: Date;
 
+    @Column("simple-json", {nullable: true})
+    acl: {
+        write: {
+         roles: number[],
+         users: number[]
+        },
+        read: {
+         roles: number[],
+         users: number[]
+        }
+     }
+
 }
 
