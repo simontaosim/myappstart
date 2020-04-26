@@ -13,9 +13,11 @@ import resourceAccess from './middles/resourceAccess';
 import tokenParse from './middles/tokenParse';
 import guard from './middles/guard';
 import PermissionController from './controllers/PermissionController';
+import RoleController from './controllers/RoleController';
 
 @registerController(
     [
+        RoleController,
         PermissionController,
         AuthController, 
         RestController 
@@ -42,7 +44,6 @@ export default class App{
         this.server.use(restful);
         
         this.server.use(this.router.routes()).use(this.router.allowedMethods());
-        console.log(this.router);
         
         this.server.listen(8080, ()=>{
             console.log('server start at', 8080);

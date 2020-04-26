@@ -169,7 +169,10 @@ export default class RestService{
 
     async remove(id:number){
         try {
-            const removeRlt = await this.repository.softDelete(id);
+            const removeRlt = await this.repository
+            .createQueryBuilder().softDelete()
+            .where("id = :id", { id })
+            .execute();
             return removeRlt;
         } catch (e) {
             throw e;

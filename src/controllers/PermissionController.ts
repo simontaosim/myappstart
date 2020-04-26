@@ -9,7 +9,6 @@ export default class PermissionController{
 
     @httpPost('/permissions')
     async create(ctx: koa.Context){
-        console.log("新的permission router");
         
         try {
             let  createParams  = ctx.request.body; 
