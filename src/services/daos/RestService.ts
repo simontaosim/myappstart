@@ -155,10 +155,13 @@ export default class RestService{
 
     async update(id:number, params: object){
         try {
-            const updateRlt = await this.repository.update(id, { ...params });
-            console.log({updateRlt});
+           
+            const updateResult  =  await this.repository
+            .createQueryBuilder().update().set({...params})
+            .where("id = :id", { id })
+            .execute();
             
-            return updateRlt;
+            return updateResult;
         } catch (e) {
             throw e;
         }
