@@ -9,20 +9,20 @@ export class RoleSubscriber implements EntitySubscriberInterface<Role> {
         return Role;
     }
     afterUpdate(event: UpdateEvent<Role>){
-        console.log("更新了role", event.entity, event.updatedColumns, event.databaseEntity, event.updatedRelations);
+        console.log("更新了role", event.entity, event.databaseEntity, event.manager);
         
     }
 
     beforeUpdate(event: UpdateEvent<Role>){
-        console.log("開始更新role", event.entity, event.updatedColumns);
+        console.log("開始更新role", event.entity, event.databaseEntity);
     }
 
     afterRemove(event: RemoveEvent<Role>){
-        console.log("刪除了role", event.entity, event.databaseEntity, event.entityId);
+        console.log("刪除了role", event.entity, event.databaseEntity, event.manager);
     }
 
     afterLoad(Role, event: LoadEvent<Role>){
-        console.log("d當前操作的entity", event.entity);
+        console.log(event.entity);
         
     }
 }
