@@ -14,9 +14,11 @@ import tokenParse from './middles/tokenParse';
 import guard from './middles/guard';
 import PermissionController from './controllers/PermissionController';
 import RoleController from './controllers/RoleController';
+import UploadController from './controllers/UploadController';
 
 @registerController(
     [
+        UploadController,
         RoleController,
         PermissionController,
         AuthController, 
