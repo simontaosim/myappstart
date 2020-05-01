@@ -14,24 +14,33 @@ export default {
         await putKey(currentIndexKey, currentIndex.toString());
         const indexKey = `${prefixString}/${jobName}/${currentIndex.toString()}`;
         await putKey(indexKey, enityStr);
-      
-
-    },
-
-    pop: async (jobName:string, callBack: (enity:any)=>void) => {
-        const currentIndexKey = `${prefixString}/${jobName}/currentIndexKey`;
         const headIndexKey = `${prefixString}/${jobName}/haedIndexKey`;
-        let currentIndex: number | string | null = await getKey(currentIndexKey);
-        if(!currentIndex || parseInt(currentIndex)<=0){
-            return callBack(null);
-        }
-        currentIndex = parseInt(currentIndex);
-
         let headIndex: number | string | null = await getKey(headIndexKey);
         if(!headIndex || parseInt(headIndex) > currentIndex){
             await putKey(headIndexKey, "1");
             await putKey(currentIndexKey, '0');
-            return callBack(null);
+        }
+      
+
+    },
+
+    pop: async (jobName:string, callBack: (enity:any, currentIndex:number)=>void) => {
+        const currentIndexKey = `${prefixString}/${jobName}/currentIndexKey`;
+        const headIndexKey = `${prefixString}/${jobName}/haedIndexKey`;
+        let currentIndex: number | string | null = await getKey(currentIndexKey);
+        if(!currentIndex || parseInt(currentIndex)<=0){
+            currentIndex = 0;
+            await putKey(currentIndexKey, '0');
+            return callBack(null, currentIndex);
+        }
+        currentIndex = parseInt(currentIndex);
+
+        let headIndex: number | string | null = await getKey(headIndexKey);
+        if(!headIndex){
+            await putKey(headIndexKey, "1");
+            await putKey(currentIndexKey, '0');
+            headIndex = parseInt(headIndex);
+            return callBack(null, currentIndex);
         }
         headIndex = parseInt(headIndex);
         
@@ -45,9 +54,14 @@ export default {
         
 
         headIndex++;
-        await putKey(headIndexKey, headIndex.toString());
+        if(headIndex > currentIndex){
+            await putKey(headIndexKey, "1");
+            await putKey(currentIndexKey, '0');
+        }else{
+            await putKey(headIndexKey, headIndex.toString());
+        }
         
-        callBack(value);
+        callBack(JSON.parse(value), currentIndex);
 
     }
 }

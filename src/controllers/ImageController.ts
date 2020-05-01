@@ -4,7 +4,7 @@ import { httpGet } from "../decorators/HttpRoutes";
 import Jobs from '../utils/Jobs';
 
 export default class UploadController {
-    @httpGet("/upload")
+    @httpGet("/image/:resource/:id/:filename")
     async upload(ctx: koa.Context){
         // await Jobs.push("test", {good: 'test1'});
         // await Jobs.push("test", {good: 'test2'});

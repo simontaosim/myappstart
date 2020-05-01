@@ -4,6 +4,7 @@ import { Role } from "../../entity/Role";
 import { Post } from "../../entity/Post";
 import { Permission } from "../../entity/Permission";
 import  * as bcrypt from 'bcrypt';
+import Jobs from "../../utils/Jobs";
 
 export interface IListQuerySort {
     [x: string]: 1 | "ASC" | "DESC" | -1;
@@ -155,7 +156,7 @@ export default class RestService{
 
     async update(id:number, params: object){
         try {
-           
+            await Jobs.push(`${this.resource}/update`, id);
             const updateResult  =  await this.repository
             .createQueryBuilder().update().set({...params})
             .where("id = :id", { id })
@@ -167,8 +168,9 @@ export default class RestService{
         }
     }
 
-    async remove(id:number){
+    remove = async  (id:number) => {
         try {
+            await Jobs.push(`${this.resource}/softDelete`, id);
             const removeRlt = await this.repository
             .createQueryBuilder().softDelete()
             .where("id = :id", { id })
@@ -180,10 +182,12 @@ export default class RestService{
     }
 
     async removeMany(ids: number[]){
-        console.log(ids);
         try {
-            const removeRlt = await this.repository.softDelete(ids);
-           
+            await Jobs.push(`${this.resource}/softDeleteMany`, ids);
+            const removeRlt = await this.repository
+            .createQueryBuilder().softDelete()
+            .where("id IN (:...ids)", { ids })
+            .execute();
             return removeRlt;
             
         } catch (e) {
