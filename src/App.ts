@@ -15,9 +15,11 @@ import guard from './middles/guard';
 import PermissionController from './controllers/PermissionController';
 import RoleController from './controllers/RoleController';
 import UploadController from './controllers/UploadController';
+import UserController from './controllers/UserController';
 
 @registerController(
     [
+        UserController,
         UploadController,
         RoleController,
         PermissionController,
