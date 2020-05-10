@@ -5,6 +5,7 @@ import { Post } from "../../entity/Post";
 import { Permission } from "../../entity/Permission";
 import  * as bcrypt from 'bcrypt';
 import Jobs from "../../utils/Jobs";
+import { PostTag } from "../../entity/PostTag";
 
 export interface IListQuerySort {
     [x: string]: 1 | "ASC" | "DESC" | -1;
@@ -48,15 +49,21 @@ export default class RestService{
                 break;
             case "posts":
                 this.repository = connection.getRepository(Post);
-                this.listSelect = ['id', 'title', "authorId", 'acl', 'createdDate', 'updatedDate'];
-                this.detailSelect = ['id', 'title', "body",'acl',  "authorId", 'createdDate', 'updatedDate'];
+                this.listSelect = ['id', 'title', "authorId","cover", 'acl', 'createdDate', 'updatedDate'];
+                this.detailSelect = ['id', 'title', "body",'acl', "cover", "authorId", 'createdDate', 'updatedDate'];
                 this.searchSelect = ['title', 'body'];
+                this.relations = ['tags']
                 break;
             case "permissions":
                 this.repository = connection.getRepository(Permission);
                 this.listSelect = ['id', 'resource','acl',"roleId",  'get', 'post', 'put', 'remove', 'grant','createdDate', 'updatedDate',]
                 this.detailSelect = ['id', 'resource', 'get', 'post',"roleId", 'put', 'remove', 'grant'];
-
+                break;
+            case "tags":
+                this.repository = connection.getRepository(PostTag);
+                this.listSelect = ['id','name',"name_zh", 'createdDate', 'updatedDate',]
+                this.detailSelect = ['id','name',"name_zh", 'createdDate', 'updatedDate',];
+                this.searchSelect = ["name"]
                 break;
             default:
                 throw("NO_RESOURCE_FOUND");

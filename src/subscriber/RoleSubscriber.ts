@@ -12,6 +12,7 @@ export class RoleSubscriber implements EntitySubscriberInterface<Role> {
     async afterUpdate(event: UpdateEvent<Role>){
         console.log("更新了role");
         await Jobs.pop(`roles/softDelete`, async  (id:any, currentIndex:number)=>{
+           
             const repository =  getConnection(process.env.NODE_ENV).getRepository(Permission);
             await repository
             .createQueryBuilder().softDelete()
@@ -20,6 +21,9 @@ export class RoleSubscriber implements EntitySubscriberInterface<Role> {
             
         })
         await Jobs.pop(`roles/softDeleteMany`, async  (ids:any, currentIndex:number)=>{
+            if(!ids){
+                return false;
+            }
             const repository =  getConnection(process.env.NODE_ENV).getRepository(Permission);
             await repository
             .createQueryBuilder().softDelete()

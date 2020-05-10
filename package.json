@@ -10,8 +10,11 @@
       "assert": "^2.0.0",
       "chai": "^4.2.0",
       "mocha": "^7.1.1",
+      "nodemon": "^2.0.3",
+      "rimraf": "^3.0.2",
       "ts-node": "3.3.0",
       "ts-node-dev": "^1.0.0-pre.44",
+      "tsc": "^1.20150623.0",
       "typescript": "3.3.3333"
    },
    "dependencies": {
@@ -22,27 +25,35 @@
       "@types/koa-router": "^7.4.0",
       "@types/koa__cors": "^3.0.1",
       "@types/node-fetch": "^2.5.5",
+      "@types/uuid": "^7.0.3",
       "bcrypt": "^4.0.1",
       "crypto-random-string": "^3.2.0",
+      "file-type": "^14.3.0",
       "http-graceful-shutdown": "^2.3.2",
+      "ipfs": "^0.43.3",
       "jsonwebtoken": "^8.5.1",
       "koa": "^2.11.0",
       "koa-body": "^4.1.1",
       "koa-router": "^8.0.8",
       "level-rocksdb": "^4.0.0",
+      "mkdirp": "^1.0.4",
       "mochawesome": "^5.0.0",
       "node-fetch": "^2.6.0",
       "pg": "^8.0.3",
       "reflect-metadata": "^0.1.10",
+      "remove-blank-lines": "^1.4.0",
       "sqlite3": "^4.0.3",
+      "striptags": "^3.1.1",
       "typeorm": "0.2.24",
       "typeorm-seeding": "^1.4.0"
    },
    "scripts": {
-      "dev-server": "NODE_ENV=development ts-node-dev --respawn --transpileOnly  src/index.ts",
+      "dev-server": "NODE_ENV=development nodemon  -e  ts  --exec ts-node  src/index.ts",
       "test": "NODE_ENV=test mocha   --reporter mochawesome",
       "seed-dev": "ts-node ./node_modules/typeorm-seeding/dist/cli.js  seed  -c 'development'",
+      "seed-pro": "NODE_ENV=production ts-node ./node_modules/typeorm-seeding/dist/cli.js  seed  -c 'production'",
       "dev": "yarn seed-dev && yarn dev-server",
-      "clear": "NODE_ENV=development typeorm schema:drop -c 'development'"
+      "build": "rimraf ./build && tsc && yarn seed-pro",
+      "start": "NODE_ENV=production node build/index.js "
    }
 }

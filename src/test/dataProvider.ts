@@ -181,11 +181,17 @@ export default {
             if (response.status < 200 || response.status >= 300) {
                 throw new Error(response.statusText);
             }
+            
             return response.json();
         })
-        .then(({data}: ICreateResult)=>({
-            data,
-        }))
+        .then(({data}: any)=>{
+            if (data.code === 'users:create:fail') {
+                throw new Error(data.reason);
+            }
+            return {
+                data,
+            }
+        })
     }
     ,
     delete: (resource:string,  params: IParams): Promise<IGetOneResult> =>

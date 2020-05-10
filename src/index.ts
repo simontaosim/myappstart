@@ -1,14 +1,18 @@
 import "reflect-metadata";
-import {createConnection, Connection} from "typeorm";
+import { createConnection, Connection } from "typeorm";
 import App from "./App";
+import ipfsnode from "./utils/ipfsnode";
 
-async function start(){
+async function start() {
     try {
-        const connection:Connection = await createConnection(process.env.NODE_ENV || 'development');
+        const connection: Connection = await createConnection(process.env.NODE_ENV || 'development');
         const app = new App();
+       
         app.start(connection);
+        
     } catch (error) {
-        error => console.log(error)
+        console.log(error);
+        throw error;
     }
 }
 start();

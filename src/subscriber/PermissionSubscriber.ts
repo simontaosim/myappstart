@@ -7,7 +7,7 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
         return Permission;
     }
     afterUpdate(event: UpdateEvent<Permission>){
-        console.log("更新了permissoin", event.entity, event.databaseEntity, event.manager);
+        console.log("更新了permissoin");
         
     }
 }

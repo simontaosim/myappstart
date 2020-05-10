@@ -6,17 +6,17 @@
       "port": 5432,
       "username": "postgres",
       "password": "123666",
-      "database": "appstart_dev",
+      "database": "appstart_pro",
       "synchronize": true,
       "logging": true,
       "entities": [
-         "src/entity/**/*.ts"
+         "src/entity/**/*{.ts,.js}"
       ],
       "migrations": [
-         "src/migration/**/*.ts"
+         "src/migration/**/*{.ts,.js}"
       ],
       "subscribers": [
-         "src/subscriber/**/*.ts"
+         "src/subscriber/**/*{.ts,.js}"
       ],
       "seeds": [
          "src/seeds/**/*{.ts,.js}"
@@ -53,23 +53,31 @@
    },
    {
       "name": "production",
-      "type": "sqlite",
-      "database": "database.production.sqlite",
-      "synchronize": false,
-      "logging": false,
+      "type": "postgres",
+      "username": "postgres",
+      "password": "123666",
+      "database": "appstart_dev",
+      "synchronize": true,
+      "logging": true,
       "entities": [
-         "src/entity/**/*.ts"
+         "build/entity/**/*{.ts,.js}"
       ],
       "migrations": [
-         "src/migration/**/*.ts"
+         "build/migration/**/*{.ts,.js}"
       ],
       "subscribers": [
-         "src/subscriber/**/*.ts"
+         "build/subscriber/**/*{.ts,.js}"
+      ],
+      "seeds": [
+         "build/seeds/**/*{.ts,.js}"
+      ],
+      "factories": [
+         "build/factories/**/*{.ts,.js}"
       ],
       "cli": {
-         "entitiesDir": "src/entity",
-         "migrationsDir": "src/migration",
-         "subscribersDir": "src/subscriber"
+         "entitiesDir": "build/entity",
+         "migrationsDir": "build/migration",
+         "subscribersDir": "build/subscriber"
       }
    }
 ]

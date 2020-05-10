@@ -14,13 +14,17 @@ import tokenParse from './middles/tokenParse';
 import guard from './middles/guard';
 import PermissionController from './controllers/PermissionController';
 import RoleController from './controllers/RoleController';
-import UploadController from './controllers/UploadController';
 import UserController from './controllers/UserController';
+import FileController from './controllers/FileController';
+import PostTagController from './controllers/PostTagController';
+import PostController from './controllers/PostController';
 
 @registerController(
     [
+        PostController,
+        FileController,
+        PostTagController,
         UserController,
-        UploadController,
         RoleController,
         PermissionController,
         AuthController, 
@@ -41,7 +45,13 @@ export default class App{
             origin: '*',
             exposeHeaders: 'Content-Range'
         }));
-        this.server.use(koaBody());
+        this.server.use(koaBody({
+            multipart: true,
+            formidable: {
+                maxFileSize: 10*1024 * 1024 * 1024,   // 设置上传文件大小最大限制，默认2M,
+                uploadDir: 'upload/',
+            }
+        }));
         this.server.use(tokenParse);
         this.server.use(resourceAccess);
         this.server.use(guard);

@@ -23,13 +23,12 @@ export default class PermissionService {
     }
 
     getOneByRoleAndResource = (roleId:number, resource: string) => {
-        
+
     }
 
     isAccess = async (acl: IACLParams) => {
         const roleService = new RoleService(this.connection);
         const adminId = await roleService.getAdminId();
-        console.log({adminId});
         const {roleIds, resourceId, userId,resource, method} = acl;
         if (roleIds.includes(adminId)) {
             return true;
@@ -41,9 +40,9 @@ export default class PermissionService {
                 method,
             }
          });
-         console.log({
-             permission
-         });
+        //  console.log({
+        //      permission
+        //  });
          
 
          if(permission){

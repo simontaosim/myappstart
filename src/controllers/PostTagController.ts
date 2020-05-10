@@ -2,15 +2,15 @@ import * as koa from 'koa';
 import { httpPut, httpGet, httpPost } from '../decorators/HttpRoutes';
 
 import RestService from '../services/daos/RestService';
-import { Role } from '../entity/Role';
 import { In, Like, Not } from 'typeorm';
+import { PostTag } from '../entity/PostTag';
 
-export default class RoleController{
-    @httpGet('/roles')
+export default class PostTagController{
+    @httpGet('/tags')
     async list(ctx: koa.Context) {
         const { resource } = ctx.params;
         let { filter, range, sort } = ctx.query;
-        const repository = ctx.DBConnection.getRepository(Role);
+        const repository = ctx.DBConnection.getRepository(PostTag);
 
         filter = filter ? JSON.parse(filter) : {};
         if (filter.id) {
@@ -65,12 +65,12 @@ export default class RoleController{
 
     }
 
-    @httpPut('/roles/:id')
+    @httpPut('/tags/:id')
     async update(ctx: koa.Context){
         const {id } = ctx.params;
         try {
             let  updateParams  = (ctx.request as any).body; 
-            const restService = new RestService("roles", ctx.DBConnection);
+            const restService = new RestService("tags", ctx.DBConnection);
             
             await restService.update(id, {
                 name: updateParams.name? updateParams.name: updateParams.name_zh,
@@ -91,10 +91,10 @@ export default class RoleController{
        
     }
 
-    @httpPost("/roles")
+    @httpPost("/tags")
     async create(ctx: koa.Context){
         const { name, name_zh } = (ctx.request as any).body;
-        const repository = ctx.DBConnection.getRepository(Role);
+        const repository = ctx.DBConnection.getRepository(PostTag);
         try {
             
             const instance =  repository.create({

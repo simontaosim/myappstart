@@ -19,6 +19,7 @@ export  function putKey(key:string, value:string):Promise<string>{
       throw err;
      }
      res(value);
+     //此处可以用socket节点告知其他服务器有更新
     })
   })
 }

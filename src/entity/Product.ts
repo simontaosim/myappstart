@@ -8,24 +8,16 @@ import {
     ManyToOne,
     DeleteDateColumn,
     JoinColumn,
-    ManyToMany,
-    RelationId,
-    JoinTable,
 } from "typeorm";
 import { User } from "./User";
-import { PostTag } from "./PostTag";
 
 @Entity()
- export class Post {
+ export class Product {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column("simple-json", {nullable: true})
-    cover: {
-        small: string,
-        cover: string,
-        src: string,
-    };
+    @Column({nullable: true})
+    cover: string;
 
     @Column()
     title: string;
@@ -42,19 +34,12 @@ import { PostTag } from "./PostTag";
     @VersionColumn()
     version: number;
 
-    @ManyToMany(type => PostTag, { onDelete: 'SET NULL' })
-    @JoinTable()
-    tags: PostTag[]
-
-    @RelationId((post: Post) => post.tags)
-    tagIds: number[]
-
     @ManyToOne(type=> User, user => user.posts, { onDelete: 'SET NULL' })
-    @JoinColumn({ name: "authorId" })
-    author: User
+    @JoinColumn({ name: "fromUserId" })
+    fromUser: User
 
     @Column("int", { nullable: true })
-    authorId: number;
+    fromUserId: number;
 
     @DeleteDateColumn()
     deletedDate: Date;

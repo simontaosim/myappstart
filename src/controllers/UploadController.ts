@@ -1,23 +1,29 @@
 import * as koa from 'koa';
-
-import { httpGet } from "../decorators/HttpRoutes";
-import Jobs from '../utils/Jobs';
+import * as uuid from 'uuid';
+import {  httpPost } from "../decorators/HttpRoutes";
+import ipfsnode from '../utils/ipfsnode';
+import { readFile, createReadStream } from 'fs';
 
 export default class UploadController {
-    @httpGet("/upload")
+    @httpPost("/upload")
     async upload(ctx: koa.Context){
-        // await Jobs.push("test", {good: 'test1'});
-        // await Jobs.push("test", {good: 'test2'});
-        // await Jobs.push("test", {good: 'test3'});
-        await Jobs.pop("test", (value:any, currentIndex) =>{
-            console.log({
-                value,
-                currentIndex
-            });
-            ctx.body = {value, currentIndex};
-            
-        });
-        // ctx.body = "push";
-       
+        
+        console.log("开始上传图片。。。");
+        const filename = ctx.request.body.filename || uuid.v4();
+        const file = ctx.request.files.file;
+       const stream  = createReadStream(file.path);
+       console.log(stream);
+        const ext = file.name.split('.').pop(); 
+        const ipfs = await ipfsnode();
+        await ipfs.files.touch(`/images/${file.name}`);
+        await  ipfs.files.write(`/images/${file.name}`, stream);
+        const stat = await ipfs.files.stat(`/images/${file.name}`);
+       ctx.rest({
+           filename,
+           file,
+           ext,
+           stat,
+           cid: stat.cid.toString()
+       })
     }
 }
