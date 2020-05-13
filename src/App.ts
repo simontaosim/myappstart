@@ -18,10 +18,12 @@ import UserController from './controllers/UserController';
 import FileController from './controllers/FileController';
 import PostTagController from './controllers/PostTagController';
 import PostController from './controllers/PostController';
+import BinanceController from './controllers/BinanceController';
 
 @registerController(
     [
         PostController,
+        BinanceController,
         FileController,
         PostTagController,
         UserController,
