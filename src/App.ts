@@ -62,7 +62,7 @@ export default class App{
         this.server.use(this.router.routes()).use(this.router.allowedMethods());
         
         this.server.listen(8080, ()=>{
-            console.log('server start at', 8080);
+            console.log('server start at', 9987);
         })
     }
     async stop(){
