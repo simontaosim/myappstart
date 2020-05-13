@@ -10,7 +10,7 @@ export default class AuthController{
     @httpPost('/login')
    async  login(ctx: koa.Context){
         const userService = new UserService(ctx.DBConnection);
-        const   body  = ctx.request.body; 
+        const   body  = (ctx.request as any).body; 
         const user = await userService.findByUsername(body.username);
         if(!user){
             return ctx.rest({
@@ -77,8 +77,6 @@ export default class AuthController{
             for (let index = 0; index < permissions.length; index++) {
                 const permission = permissions[index];
                 
-                console.log("每个角色", permission);
-                
                 if(permission !== 'superAdmin'){
                     if(permission.post){
                         permissionNames.push(`post_${permission.resource}`);
@@ -100,8 +98,6 @@ export default class AuthController{
 
             permissionNames.push('nobody');
             permissionNames.push('register');
-            console.log({permissionNames});
-
 
             if(user){
                 return ctx.rest({
@@ -118,7 +114,7 @@ export default class AuthController{
     @httpPost('/register')
     async register(ctx: koa.Context){
         const userService = new UserService(ctx.DBConnection);
-        const   body  = ctx.request.body; 
+        const   body  = (ctx.request as any).body; 
         const userExist = await userService.findByUsername(body.username);
         if(userExist){
             ctx.status = 203;

@@ -2,7 +2,7 @@ import * as koa from 'koa';
 import { httpPut, httpPost, httpGet } from '../decorators/HttpRoutes';
 import * as bcrypt from 'bcrypt';
 import { Role } from '../entity/Role';
-import { In, Like, Not } from 'typeorm';
+import { In } from 'typeorm';
 import { User } from '../entity/User';
 
 export default class UserController {
@@ -26,37 +26,65 @@ export default class UserController {
         sort = sort ? JSON.parse(sort) : ["id", 'desc'];
 
         try {
-            const conditions = [];
-            const searchSelect = ['username']
-            if (filter.q) {
-                for (let index = 0; index < searchSelect.length; index++) {
-                    const condition: object = {};
-                    const field = searchSelect[index];
-                    condition[field] = Like(`%${filter.q}%`);
-                    conditions.push(condition);
-                }
+           let queryString = `user.username != :username ${filter.q? ' and user.username like :q' : ''}`;
+            const condition:any = { };
+            condition.username = "superAdmin";
+            const listSelect = [
+                "user.id",
+                "user.username",
+                "user.createdDate",
+                "user.updatedDate",
+                "user.acl"
+            ]
+            if(filter.q){
+                condition.q =  `%${filter.q}%`
             }
-            else {
-                conditions.push({ ...filter,   username: Not("superAdmin") })
+            let listRecords = [];
+            if(filter.roleIds){
+                listRecords = await repository.createQueryBuilder('user')
+                .leftJoin("user.roles","role")
+                .where(queryString, 
+                    condition)
+                .andWhere("user_role.roleId IN (:...roleIds)", {roleIds:  filter.roleIds})
+                .select(listSelect)
+                .skip(range[0])
+                .take(range[1] - range[0])
+                .orderBy(`user.${sort[0]}`, sort[1])
+                .getMany();
+            }else{
+                listRecords = await repository.createQueryBuilder('user')
+                .where(queryString, 
+                    condition)
+                .select(listSelect)
+                .skip(range[0])
+                .take(range[1] - range[0])
+                .orderBy(`user.${sort[0]}`, sort[1])
+                .getMany();
             }
-            const list = await repository.find({
-                where: conditions,
-                select: ['id', 'username', 'createdDate', 'updatedDate', 'acl'],
-                skip: range[0],
-                take: range[1] - range[0],
-                order: {
-                    [`${sort[0]}`]:sort[1]
-                }
-            });
+            ctx.rest(listRecords);
+            let count:any = null;
+            if(filter.roleIds){
+                count = await repository.createQueryBuilder('user')
+                .leftJoin("user.roles","role")
+                .where(queryString, 
+                    condition)
+                .andWhere("user_role.roleId IN (:...roleIds)", {roleIds:  filter.roleIds})
+                .select('COUNT(*)').getRawOne();
+                const head = {
+                    'Content-Range': `${resource} ${range[0]}-${range[1]}/${count.count}`,
+                };
+                ctx.res.writeHead(200, head);
+            }else{
+                count = await repository.createQueryBuilder('user')
+                .where(queryString, 
+                    condition)
+                .select('COUNT(*)').getRawOne();
+                const head = {
+                    'Content-Range': `${resource} ${range[0]}-${range[1]}/${count.count}`,
+                };
+                ctx.res.writeHead(200, head);
+            }
           
-            ctx.rest(list);
-            const count = await repository.count({
-                where: conditions
-            })
-            const head = {
-                'Content-Range': `${resource} ${range[0]}-${range[1]}/${count}`,
-            };
-            ctx.res.writeHead(200, head);
         } catch (e) {
             ctx.status = 400;
             throw e;
@@ -99,14 +127,28 @@ export default class UserController {
         }): [];
       
         user.roles = roles;
-        await userRepository.save(user);
+       
+        try {
+            
+            await userRepository.save(user);
+            return ctx.rest({
+                data: {
+                    ...user,
+                },
+                id: user.id,
+            })
+        } catch (e) {
+            console.error(e.detail);
+            ctx.status = 400;
+            if(e.detail.includes("already exists")){
+                ctx.res.statusMessage = 'USERNAME_ALREADY_EXIST';
+            }
+            
+            return ctx.body = e.detail;
+            
+        }
 
-        ctx.rest({
-            data: {
-                ...user,
-            },
-            id: user.id,
-        })
+     
     }
 
 

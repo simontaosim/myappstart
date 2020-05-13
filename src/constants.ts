@@ -1,3 +1,3 @@
 export const RESOURCES = [
-    "users", "posts", "roles", "permissions"
+    "users", "posts", "roles", "permissions", 'tags'
 ]

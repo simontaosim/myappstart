@@ -95,6 +95,20 @@ export default class RoleController{
     async create(ctx: koa.Context){
         const { name, name_zh } = (ctx.request as any).body;
         const repository = ctx.DBConnection.getRepository(Role);
+        const roleFind = await repository.findOne({
+            where: {
+                name: name? name: name_zh,
+                name_zh: name_zh? name_zh : name
+            }
+        })
+        if(roleFind){
+            ctx.status = 400;
+            ctx.res.statusMessage = "ROLE_ALREADY_EXIST";
+            return ctx.rest({
+                code: "users:create:fail",
+                reason: "PASSWORD_REPEAT_WRONG"
+            })
+        }
         try {
             
             const instance =  repository.create({

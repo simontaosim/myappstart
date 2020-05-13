@@ -27,22 +27,22 @@ export default class PermissionService {
     }
 
     isAccess = async (acl: IACLParams) => {
+        console.log({acl});
         const roleService = new RoleService(this.connection);
         const adminId = await roleService.getAdminId();
         const {roleIds, resourceId, userId,resource, method} = acl;
         if (roleIds.includes(adminId)) {
             return true;
         }
+        const methodPass  = {};
+        methodPass[method] = true;
         const permission = await this.repository.findOne({
             where: {
                 roleId: In(roleIds),
                 resource,
-                method,
+                ...methodPass,
             }
          });
-        //  console.log({
-        //      permission
-        //  });
          
 
          if(permission){

@@ -5,8 +5,8 @@ import { User } from '../entity/User';
 import { Post } from '../entity/Post';
 import { Role } from '../entity/Role';
 import { Permission } from '../entity/Permission';
-import { DefaultResource } from '../entity/DefaultResource';
 import DefaultResourceService from '../services/daos/DefaultResourceService';
+import { PostTag } from '../entity/PostTag';
 
 
 export default async function (ctx: koa.Context, next: koa.Next ){
@@ -17,13 +17,13 @@ export default async function (ctx: koa.Context, next: koa.Next ){
             "posts": Post,
             'roles': Role,
             'permissions': Permission,
+            'tags': PostTag
         }
-        // console.log({
-        //     ACLParams
-        // });
+        console.log({
+            ACLParams
+        });
         //模块访问
         const permissionService = new PermissionService(ctx.DBConnection);
-        // console.log("是否能够通过", await permissionService.isAccess(ACLParams));
         //权限判断以单条记录的acl优先，接着才判断permissions;
         //acl通过，permissions无法阻止;
         //acl不通过，permission也无法通过;
@@ -45,7 +45,6 @@ export default async function (ctx: koa.Context, next: koa.Next ){
                     reason: 'default resources can not deleted'
                 }
             }
-            return await next();
         }
 
         const moduleAccess = await permissionService.isAccess(ACLParams);
