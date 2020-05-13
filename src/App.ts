@@ -61,7 +61,7 @@ export default class App{
         
         this.server.use(this.router.routes()).use(this.router.allowedMethods());
         
-        this.server.listen(8080, ()=>{
+        this.server.listen(9987, ()=>{
             console.log('server start at', 9987);
         })
     }
