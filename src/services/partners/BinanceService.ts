@@ -127,11 +127,11 @@ export default class BinanceService {
         const allPossible = this.price.upPercentTimes + this.price.downPercentTimes;
 
         //找出目标价格的最近更新的时间和现在的时间的间隔间，google trends bitcoin price的
-        console.log("目标价格", this.price.price * (1 + this.limitWin));
+        console.log("目标价格", this.currentPrice * (1 + this.limitWin));
         
         const targetPrice = await this.possibleRepository.findOne({
             where: {
-                price: MoreThanOrEqual(this.price.price * (1 + this.limitWin)),
+                price: MoreThanOrEqual(this.currentPrice * (1 + this.limitWin)),
                 ticker,
             },
             order: {
@@ -145,13 +145,13 @@ export default class BinanceService {
         //取google trends的平均数.
         //计算高于目标价格出现的频率，和总获取价格频率的比例
         const allShow = await this.possibleRepository.createQueryBuilder('coin_price_possible')
-            .where("ticker=:ticker", { price: this.price.price * (1 + this.limitWin), ticker })
+            .where("ticker=:ticker", { price: this.currentPrice * (1 + this.limitWin), ticker })
             .select('SUM(coin_price_possible.showTimes)').getRawOne();
 
         console.log({ allShow });
 
         const targetShow = await this.possibleRepository.createQueryBuilder('coin_price_possible')
-            .where("price>=:price and ticker=:ticker", { price: this.price.price * (1 + this.limitWin), ticker })
+            .where("price>=:price and ticker=:ticker", { price: this.currentPrice * (1 + this.limitWin), ticker })
             .select('SUM(coin_price_possible.showTimes)').getRawOne();
 
         console.log({ allShow, targetShow });
