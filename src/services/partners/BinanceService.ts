@@ -216,7 +216,7 @@ export default class BinanceService {
                     wishPossible: this.winPossibility,
                 });
             }
-        }, 3000)
+        }, 500)
     }
 
     stopAuthTrader = async (ticker) => {
