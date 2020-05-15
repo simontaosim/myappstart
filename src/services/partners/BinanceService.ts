@@ -73,7 +73,7 @@ export default class BinanceService {
                 price: newPriceNumber,
             }})
             if(!newPricePossible){
-                this.possibleRepository.create({
+                newPricePossible = this.possibleRepository.create({
                     price: newPriceNumber,
                 });
                 await this.possibleRepository.save(newPricePossible);
