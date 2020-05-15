@@ -34,7 +34,7 @@ export default class BinanceService {
             })
             await this.repository.save(newPrice);
             this.price = newPrice;
-            //反向统计避免重复计算； 找出小于当前价格20%的价格；找出大于当前价格10%的价格，并且更新
+            //反向统计避免重复计算； 找出小于当前价格10%的价格；找出大于当前价格5%的价格，并且更新
             const up20PercentPrice = await this.repository.findOne({
                 where: {
                     price: LessThanOrEqual(newPriceNumber * (1 - this.limitWin)),
@@ -45,6 +45,8 @@ export default class BinanceService {
                 }
 
             })
+            console.log({up20PercentPrice});
+            
             if(up20PercentPrice){
                 up20PercentPrice.up20PercentTimes = up20PercentPrice.up20PercentTimes + 1;
                 await this.repository.save(up20PercentPrice);
@@ -58,6 +60,8 @@ export default class BinanceService {
                     createdDate: "DESC",
                 }
             })
+            console.log({down10PercentPrice});
+            
             if(down10PercentPrice){
                 down10PercentPrice.down10PercentTimes = down10PercentPrice.down10PercentTimes + 1;
                 await this.repository.save(down10PercentPrice);
