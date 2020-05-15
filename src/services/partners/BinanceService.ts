@@ -139,8 +139,14 @@ export default class BinanceService {
             }
         });
         // const trends = await this.getGoogleTrendsPossible(targetPrice.updatedDate, new Date());
-        const trends = await this.getGoogleTrendsPossible(new Date('2020-5-4'), new Date());
-        console.log(trends);
+        try {
+            const trends = await this.getGoogleTrendsPossible(new Date('2020-5-4'), new Date());
+            console.log(trends);
+        } catch (e) {
+            console.error(e);
+            
+        }
+       
 
         //取google trends的平均数.
         //计算高于目标价格出现的频率，和总获取价格频率的比例
@@ -206,7 +212,7 @@ export default class BinanceService {
                     wishPossible: this.winPossibility,
                 });
             }
-        }, 1000)
+        }, 2123)
     }
 
     stopAuthTrader = async (ticker) => {
