@@ -42,7 +42,7 @@ export default class BinanceService {
             //反向统计避免重复计算； 找出小于当前价格10%的价格；找出大于当前价格5%的价格，并且更新
             const upPercentPrice = await this.possibleRepository.findOne({
                 where: {
-                    price: LessThanOrEqual(newPriceNumber * (1 - this.limitWin)),
+                    price: LessThanOrEqual(newPriceNumber / (1 + this.limitWin)),
                     updatedDate: LessThan(new Date()),
                     ticker,
                 },
@@ -59,7 +59,7 @@ export default class BinanceService {
             }
             const downPercentPrice = await this.possibleRepository.findOne({
                 where: {
-                    price: MoreThanOrEqual(newPriceNumber * (1 + this.limintLoss)),
+                    price: MoreThanOrEqual(newPriceNumber / (1 - this.limintLoss)),
                     updatedDate: LessThan(new Date()),
                     ticker,
                 },
