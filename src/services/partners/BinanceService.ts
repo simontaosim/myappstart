@@ -162,7 +162,7 @@ export default class BinanceService {
             .select('SUM(coin_price_possible.showTimes)').getRawOne();
 
         console.log({ showPossible: targetShow.sum/allShow.sum });
-        const possible = (this.price.upPercentTimes / allPossible+ targetShow.sum/allShow.sum)/2
+        const possible = ((this.price.upPercentTimes / allPossible===NaN ? 0 : this.price.upPercentTimes / allPossible)+ targetShow.sum/allShow.sum)/2
 
         //频率比例， 上涨可能性，google trends平均数，三者的平均数来确定最终概率.
 
