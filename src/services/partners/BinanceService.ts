@@ -125,20 +125,22 @@ export default class BinanceService {
     }
 
     calculateWinPossibility = async (ticker) => {
+        console.log('當前價格', this.price);
+        
         const allPossible = this.price.upPercentTimes + this.price.downPercentTimes;
 
         //找出目标价格的最近更新的时间和现在的时间的间隔间，google trends bitcoin price的
-        console.log("目标价格", this.currentPrice * (1 + this.limitWin));
+        // console.log("目标价格", this.currentPrice * (1 + this.limitWin));
         
-        const targetPrice = await this.possibleRepository.findOne({
-            where: {
-                price: MoreThanOrEqual(this.currentPrice * (1 + this.limitWin)),
-                ticker,
-            },
-            order: {
-                updatedDate: "DESC",
-            }
-        });
+        // const targetPrice = await this.possibleRepository.findOne({
+        //     where: {
+        //         price: MoreThanOrEqual(this.currentPrice * (1 + this.limitWin)),
+        //         ticker,
+        //     },
+        //     order: {
+        //         updatedDate: "DESC",
+        //     }
+        // });
         // const trends = await this.getGoogleTrendsPossible(targetPrice.updatedDate, new Date());
         // try {
         //     const trends = await this.getGoogleTrendsPossible(new Date('2020-5-4'), new Date());
@@ -211,7 +213,7 @@ export default class BinanceService {
                     wishPossible: this.winPossibility,
                 });
             }
-        }, 10000)
+        }, 3000)
     }
 
     stopAuthTrader = async (ticker) => {
