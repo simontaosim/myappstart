@@ -108,9 +108,10 @@ export default class BinanceService {
             const { ExploreTrendRequest } = require('g-trends')
 
             const explorer = new ExploreTrendRequest();
-            const rlt = await explorer.addKeyword('bitcoin price')
-                .between('2017-01-01','2017-01-10')
-                .download();
+            const rlt = await explorer
+            .pastHour()
+            .addKeyword('bitcoin price')
+            .download();
 
             return rlt;
                 
