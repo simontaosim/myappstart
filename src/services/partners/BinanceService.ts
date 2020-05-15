@@ -1,21 +1,24 @@
 import { Repository, LessThanOrEqual, LessThan, MoreThan, MoreThanOrEqual } from "typeorm";
 import { CoinPrice } from "../../entity/CoinPrice";
 import { getKey, putKey } from "../utils/cache";
+import { CoinPricePossible } from "../../entity/CoinPricePossible";
 
 export default class BinanceService {
     private binance: any;
     public currentPrice: number;
     public possible: number;
     private repository: Repository<CoinPrice>;
-    private price: CoinPrice;
+    private possibleRepository: Repository<CoinPricePossible>
+    private price: CoinPricePossible;
 
     //凯利公式定值
     private position = 0.1;
     private winPossibility = 1.01/3;
-    private limitWin = 0.002;
-    private limintLoss = 0.001;
-    constructor(repository: any) {
+    private limitWin = 0.01;
+    private limintLoss = 0.005;
+    constructor(repository: any, possibleRepository:any) {
         this.repository = repository;
+        this.possibleRepository = possibleRepository;
         const Binance = require('node-binance-api');
         this.binance = new Binance().options({
             APIKEY: 'lR7PKoiFSubZqjdtokWDexSYA2JrPhvToZfUGlxLYpSWjfBwxNSfxFFOtzYuDT7E',
@@ -34,39 +37,50 @@ export default class BinanceService {
                 ticker,
             })
             await this.repository.save(newPrice);
-            this.price = newPrice;
             //反向统计避免重复计算； 找出小于当前价格10%的价格；找出大于当前价格5%的价格，并且更新
-            const up20PercentPrice = await this.repository.findOne({
+            const upPercentPrice = await this.possibleRepository.findOne({
                 where: {
                     price: LessThanOrEqual(newPriceNumber * (1 - this.limitWin)),
-                    createdDate: LessThan(new Date()),
+                    updatedDate: LessThan(new Date()),
                 },
                 order: {
-                    createdDate: "DESC",
+                    updatedDate: "DESC",
                 }
 
             })
-            console.log({up20PercentPrice});
+            console.log({upPercentPrice});
             
-            if(up20PercentPrice){
-                up20PercentPrice.up20PercentTimes = up20PercentPrice.up20PercentTimes + 1;
-                await this.repository.save(up20PercentPrice);
+            if(upPercentPrice){
+                upPercentPrice.upPercentTimes = upPercentPrice.upPercentTimes + 1;
+                await this.repository.save(upPercentPrice);
             }
-            const down10PercentPrice = await this.repository.findOne({
+            const downPercentPrice = await this.repository.findOne({
                 where: {
                     price: MoreThanOrEqual(newPriceNumber * (1 + this.limintLoss)),
-                    createdDate: LessThan(new Date()),
+                    updatedDate: LessThan(new Date()),
                 },
                 order: {
-                    createdDate: "DESC",
+                    updatedDate: "DESC",
                 }
             })
-            console.log({down10PercentPrice});
+            console.log({downPercentPrice});
             
-            if(down10PercentPrice){
-                down10PercentPrice.down10PercentTimes = down10PercentPrice.down10PercentTimes + 1;
-                await this.repository.save(down10PercentPrice);
+            if(downPercentPrice){
+                downPercentPrice.down10PercentTimes = downPercentPrice.down10PercentTimes + 1;
+                await this.repository.save(downPercentPrice);
             }
+            let newPricePossible = await this.possibleRepository.findOne({where: {
+                price: newPriceNumber,
+            }})
+            if(!newPricePossible){
+                this.possibleRepository.create({
+                    price: newPriceNumber,
+                });
+                await this.possibleRepository.save(newPricePossible);
+            }
+
+            this.price = newPricePossible;
+
             this.currentPrice = Number.parseFloat(prices[ticker]);
         } catch (e) {
             console.error(e);
@@ -78,8 +92,11 @@ export default class BinanceService {
     }
 
     calculateWinPossibility = async () => {
-        const allPossible = this.price.up20PercentTimes + this.price.down10PercentTimes;
-        return this.price.up20PercentTimes / allPossible;
+        const allPossible = this.price.upPercentTimes + this.price.downPercentTimes;
+        if(allPossible === 0){
+            return 0;
+        }
+        return this.price.upPercentTimes / allPossible;
 
     }
 
