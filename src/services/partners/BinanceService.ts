@@ -161,8 +161,8 @@ export default class BinanceService {
             .where("price>=:price and ticker=:ticker", { price: this.currentPrice * (1 + this.limitWin), ticker })
             .select('SUM(coin_price_possible.showTimes)').getRawOne();
 
-        console.log({ allShow, targetShow });
-        const possible = (this.price.upPercentTimes / allPossible+ Number.parseFloat(targetShow.sum)/Number.parseFloat(allShow.sum))/2
+        console.log({ showPossible: targetShow.sum/allShow.sum });
+        const possible = (this.price.upPercentTimes / allPossible+ targetShow.sum/allShow.sum)/2
 
         //频率比例， 上涨可能性，google trends平均数，三者的平均数来确定最终概率.
 
