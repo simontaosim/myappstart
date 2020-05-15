@@ -42,6 +42,7 @@ export default class BinanceService {
                 where: {
                     price: LessThanOrEqual(newPriceNumber * (1 - this.limitWin)),
                     updatedDate: LessThan(new Date()),
+                    ticker,
                 },
                 order: {
                     updatedDate: "DESC",
@@ -52,12 +53,13 @@ export default class BinanceService {
             
             if(upPercentPrice){
                 upPercentPrice.upPercentTimes = upPercentPrice.upPercentTimes + 1;
-                await this.repository.save(upPercentPrice);
+                await this.possibleRepository.save(upPercentPrice);
             }
-            const downPercentPrice = await this.repository.findOne({
+            const downPercentPrice = await this.possibleRepository.findOne({
                 where: {
                     price: MoreThanOrEqual(newPriceNumber * (1 + this.limintLoss)),
                     updatedDate: LessThan(new Date()),
+                    ticker,
                 },
                 order: {
                     updatedDate: "DESC",
@@ -66,15 +68,17 @@ export default class BinanceService {
             console.log({downPercentPrice});
             
             if(downPercentPrice){
-                downPercentPrice.down10PercentTimes = downPercentPrice.down10PercentTimes + 1;
-                await this.repository.save(downPercentPrice);
+                downPercentPrice.downPercentTimes = downPercentPrice.downPercentTimes + 1;
+                await this.possibleRepository.save(downPercentPrice);
             }
             let newPricePossible = await this.possibleRepository.findOne({where: {
                 price: newPriceNumber,
+                ticker,
             }})
             if(!newPricePossible){
                 newPricePossible = this.possibleRepository.create({
                     price: newPriceNumber,
+                    ticker,
                 });
                 await this.possibleRepository.save(newPricePossible);
             }
