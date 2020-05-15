@@ -103,7 +103,9 @@ export default class BinanceService {
             if (isStarted === '0') {
                 return clearInterval(timer);
             }
+            
             await this.getCurrentPrice(ticker);
+            console.log('当前价格', this.price.price);
             const canBuy = await this.canBuy();
             if (canBuy) {
                 console.log(canBuy);
