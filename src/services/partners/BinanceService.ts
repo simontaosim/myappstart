@@ -12,8 +12,8 @@ export default class BinanceService {
     //凯利公式定值
     private position = 0.1;
     private winPossibility = 1.01/3;
-    private limitWin = 0.01;
-    private limintLoss = 0.005;
+    private limitWin = 0.002;
+    private limintLoss = 0.001;
     constructor(repository: any) {
         this.repository = repository;
         const Binance = require('node-binance-api');
@@ -26,9 +26,10 @@ export default class BinanceService {
     getCurrentPrice = async (ticker: string) => {
         try {
             const prices = await this.binance.futuresPrices();
-            const newPriceNumber = Number.parseFloat(prices[ticker]);
+            let  newPriceNumber = Number.parseFloat(prices[ticker]);
+            newPriceNumber =Number.parseFloat(newPriceNumber.toFixed(2));
             const newPrice = this.repository.create({
-                price: Number.parseFloat(newPriceNumber.toFixed(2)),
+                price: newPriceNumber,
                 lastPrice: this.currentPrice,
                 ticker,
             })
