@@ -11,9 +11,9 @@ export default class BinanceService {
 
     //凯利公式定值
     private position = 0.1;
-    private winPossibility = 0.51;
-    private limitWin = 0.2;
-    private limintLoss = 0.2;
+    private winPossibility = 1.01/3;
+    private limitWin = 0.1;
+    private limintLoss = 0.05;
     constructor(repository: any) {
         this.repository = repository;
         const Binance = require('node-binance-api');
@@ -115,7 +115,7 @@ export default class BinanceService {
                     wishPossible: this.winPossibility,
                 });
             }
-        }, 3000)
+        }, 1000)
     }
 
     stopAuthTrader = async (ticker) => {
