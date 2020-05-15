@@ -28,7 +28,7 @@ export default class BinanceService {
             const prices = await this.binance.futuresPrices();
             const newPriceNumber = Number.parseFloat(prices[ticker]);
             const newPrice = this.repository.create({
-                price: newPriceNumber,
+                price: Number.parseFloat(newPriceNumber.toFixed(2)),
                 lastPrice: this.currentPrice,
                 ticker,
             })
