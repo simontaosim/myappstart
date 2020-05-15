@@ -140,19 +140,19 @@ export default class BinanceService {
             }
         });
         // const trends = await this.getGoogleTrendsPossible(targetPrice.updatedDate, new Date());
-        try {
-            const trends = await this.getGoogleTrendsPossible(new Date('2020-5-4'), new Date());
-            console.log(trends);
-        } catch (e) {
-            console.error(e);
+        // try {
+        //     const trends = await this.getGoogleTrendsPossible(new Date('2020-5-4'), new Date());
+        //     console.log(trends);
+        // } catch (e) {
+        //     console.error(e);
             
-        }
+        // }
        
 
         //取google trends的平均数.
         //计算高于目标价格出现的频率，和总获取价格频率的比例
         const allShow = await this.possibleRepository.createQueryBuilder('coin_price_possible')
-            .where("ticker=:ticker", { price: this.currentPrice * (1 + this.limitWin), ticker })
+            .where("ticker=:ticker", { ticker })
             .select('SUM(coin_price_possible.showTimes)').getRawOne();
 
         console.log({ allShow });
@@ -162,13 +162,13 @@ export default class BinanceService {
             .select('SUM(coin_price_possible.showTimes)').getRawOne();
 
         console.log({ allShow, targetShow });
-
+        const possible = (this.price.upPercentTimes / allPossible+ targetShow/allShow)/2
 
         //频率比例， 上涨可能性，google trends平均数，三者的平均数来确定最终概率.
         if (allPossible === 0) {
             return 0;
         }
-        return this.price.upPercentTimes / allPossible;
+        return possible;
 
     }
 
