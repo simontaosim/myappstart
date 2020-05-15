@@ -1,4 +1,4 @@
-import { Repository, LessThanOrEqual, LessThan } from "typeorm";
+import { Repository, LessThanOrEqual, LessThan, MoreThan, MoreThanOrEqual } from "typeorm";
 import { CoinPrice } from "../../entity/CoinPrice";
 import { getKey, putKey } from "../utils/cache";
 
@@ -53,7 +53,7 @@ export default class BinanceService {
             }
             const down10PercentPrice = await this.repository.findOne({
                 where: {
-                    price: LessThanOrEqual(newPriceNumber * (1 + this.limintLoss)),
+                    price: MoreThanOrEqual(newPriceNumber * (1 + this.limintLoss)),
                     createdDate: LessThan(new Date()),
                 },
                 order: {
@@ -100,7 +100,11 @@ export default class BinanceService {
     startAutoTrade = async (ticker) => {
         //开始自动交易
         const startKey = `is_${ticker}_start`;
-        await putKey(startKey, '1')
+        const isStarted = await getKey(startKey);
+        if (isStarted === '0' || !isStarted) {
+            await putKey(startKey, '1')
+        }
+
         let timer: NodeJS.Timer;
         timer = setInterval(async () => {
             const isStarted = await getKey(startKey);
