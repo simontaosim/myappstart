@@ -45,9 +45,10 @@ export default class BinanceService {
                 }
 
             })
-            up20PercentPrice.up20PercentTimes = up20PercentPrice.up20PercentTimes + 1;
-            await this.repository.save(up20PercentPrice);
-
+            if(up20PercentPrice){
+                up20PercentPrice.up20PercentTimes = up20PercentPrice.up20PercentTimes + 1;
+                await this.repository.save(up20PercentPrice);
+            }
             const down10PercentPrice = await this.repository.findOne({
                 where: {
                     price: LessThanOrEqual(newPriceNumber * (1 + this.limintLoss)),
@@ -57,9 +58,10 @@ export default class BinanceService {
                     createdDate: "DESC",
                 }
             })
-            down10PercentPrice.down10PercentTimes = down10PercentPrice.down10PercentTimes + 1;
-            await this.repository.save(down10PercentPrice);
-
+            if(down10PercentPrice){
+                down10PercentPrice.down10PercentTimes = down10PercentPrice.down10PercentTimes + 1;
+                await this.repository.save(down10PercentPrice);
+            }
             this.currentPrice = Number.parseFloat(prices[ticker]);
         } catch (e) {
             console.error(e);
