@@ -149,7 +149,7 @@ export default class BinanceService {
         console.log({ allShow });
 
         const targetShow = await this.possibleRepository.createQueryBuilder('coin_price_possible')
-            .where("price>=:price, ticker=:ticker", { price: this.price.price * (1 + this.limitWin), ticker })
+            .where("price>=:price and ticker=:ticker", { price: this.price.price * (1 + this.limitWin), ticker })
             .select('SUM(coin_price_possible.showTimes)').getRawOne();
 
         console.log({ allShow, targetShow });
