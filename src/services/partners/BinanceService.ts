@@ -127,6 +127,8 @@ export default class BinanceService {
         const allPossible = this.price.upPercentTimes + this.price.downPercentTimes;
 
         //找出目标价格的最近更新的时间和现在的时间的间隔间，google trends bitcoin price的
+        console.log("目标价格", this.price.price * (1 + this.limitWin));
+        
         const targetPrice = await this.possibleRepository.findOne({
             where: {
                 price: MoreThanOrEqual(this.price.price * (1 + this.limitWin)),
