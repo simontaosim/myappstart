@@ -109,7 +109,7 @@ export default class BinanceService {
 
             const explorer = new ExploreTrendRequest();
             const rlt = await explorer.addKeyword('bitcoin price')
-                .between('2017-01-01 23:32','2017-01-10 18:00')
+                .between(new Date('2020-5-10'), new Date())
                 .download();
 
             return rlt;
