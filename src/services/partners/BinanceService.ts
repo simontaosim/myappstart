@@ -12,8 +12,8 @@ export default class BinanceService {
     //凯利公式定值
     private position = 0.1;
     private winPossibility = 1.01/3;
-    private limitWin = 0.1;
-    private limintLoss = 0.05;
+    private limitWin = 0.01;
+    private limintLoss = 0.005;
     constructor(repository: any) {
         this.repository = repository;
         const Binance = require('node-binance-api');
