@@ -2593,6 +2593,13 @@ functional-red-black-tree@^1.0.1, functional-red-black-tree@~1.0.1:
   resolved "https://registry.yarnpkg.com/functional-red-black-tree/-/functional-red-black-tree-1.0.1.tgz#1b0ab3bd553b2a0d6399d29c0e3ea0b252078327"
   integrity sha1-GwqzvVU7Kg1jmdKcDj6gslIHgyc=
 
+g-trends@^0.0.7:
+  version "0.0.7"
+  resolved "https://registry.yarnpkg.com/g-trends/-/g-trends-0.0.7.tgz#7764a32806c3d9a56e56efecbe7dcc9d4abcd284"
+  integrity sha512-8vAyTENICJr+LqMM6dp3dphTRbtsKmVWwC5m2JPCXIqgx5rWLjseVyiy45khbzgurn1Ttp2G8DPHQOw6JPNA1w==
+  dependencies:
+    node-fetch "^2.3.0"
+
 gar@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/gar/-/gar-1.0.4.tgz#f777bc7db425c0572fdeb52676172ca1ae9888b8"
@@ -5445,7 +5452,7 @@ node-environment-flags@1.0.6:
     object.getownpropertydescriptors "^2.0.3"
     semver "^5.7.0"
 
-node-fetch@^2.6.0:
+node-fetch@^2.3.0, node-fetch@^2.6.0:
   version "2.6.0"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.0.tgz#e633456386d4aa55863f676a7ab0daa8fdecb0fd"
   integrity sha512-8dG4H5ujfvFiqDmVu9fQ5bOHUC15JMjMY/Zumv26oOvvVJjM67KF8koCWIabKQ1GJIa9r2mMZscBq/TbdOcmNA==

@@ -16,10 +16,10 @@ export default class BinanceService {
 
     //凯利公式定值
     private position = 0.1;
-    private winPossibility = 1.01/3;
+    private winPossibility = 1.01 / 3;
     private limitWin = 0.01;
     private limintLoss = 0.005;
-    constructor(repository: any, possibleRepository:any) {
+    constructor(repository: any, possibleRepository: any) {
         this.repository = repository;
         this.possibleRepository = possibleRepository;
         this.binance = new Binance().options({
@@ -31,8 +31,8 @@ export default class BinanceService {
     getCurrentPrice = async (ticker: string) => {
         try {
             const prices = await this.binance.futuresPrices();
-            let  newPriceNumber = Number.parseFloat(prices[ticker]);
-            newPriceNumber =Number.parseFloat(newPriceNumber.toFixed(2));
+            let newPriceNumber = Number.parseFloat(prices[ticker]);
+            newPriceNumber = Number.parseFloat(newPriceNumber.toFixed(2));
             const newPrice = this.repository.create({
                 price: newPriceNumber,
                 lastPrice: this.currentPrice,
@@ -51,9 +51,9 @@ export default class BinanceService {
                 }
 
             })
-            console.log({upPercentPrice});
-            
-            if(upPercentPrice){
+            console.log({ upPercentPrice });
+
+            if (upPercentPrice) {
                 upPercentPrice.upPercentTimes = upPercentPrice.upPercentTimes + 1;
                 await this.possibleRepository.save(upPercentPrice);
             }
@@ -67,24 +67,26 @@ export default class BinanceService {
                     updatedDate: "DESC",
                 }
             })
-            console.log({downPercentPrice});
-            
-            if(downPercentPrice){
+            console.log({ downPercentPrice });
+
+            if (downPercentPrice) {
                 downPercentPrice.downPercentTimes = downPercentPrice.downPercentTimes + 1;
                 await this.possibleRepository.save(downPercentPrice);
             }
-            let newPricePossible = await this.possibleRepository.findOne({where: {
-                price: newPriceNumber,
-                ticker,
-            }})
-            if(!newPricePossible){
+            let newPricePossible = await this.possibleRepository.findOne({
+                where: {
+                    price: newPriceNumber,
+                    ticker,
+                }
+            })
+            if (!newPricePossible) {
                 newPricePossible = this.possibleRepository.create({
                     price: newPriceNumber,
                     ticker,
                     showTimes: 1,
                 });
-            }else {
-                newPricePossible.showTimes +=1;
+            } else {
+                newPricePossible.showTimes += 1;
             }
             await this.possibleRepository.save(newPricePossible);
 
@@ -101,26 +103,33 @@ export default class BinanceService {
 
     }
 
-    getGoogleTrendsPossible = async  (startTime: Date, endTime: Date) => {
+    getGoogleTrendsPossible = async (startTime: Date, endTime: Date) => {
         try {
-            const trends = await  googleTrends.interestOverTime({keyword: "bitcoin price", startTime, endTime, geo: 'global'});
-            return trends;
+            const { ExploreTrendRequest } = require('g-trends')
+
+            const explorer = new ExploreTrendRequest();
+            const rlt = await explorer.addKeyword('Dream about snakes')
+                .compare('Dream about falling')
+                .download();
+
+            return rlt;
+                
         } catch (e) {
             console.error(e);
             throw e;
-            
+
         }
-    
-       
+
+
     }
 
     calculateWinPossibility = async (ticker) => {
         const allPossible = this.price.upPercentTimes + this.price.downPercentTimes;
-        
+
         //找出目标价格的最近更新的时间和现在的时间的间隔间，google trends bitcoin price的
         const targetPrice = await this.possibleRepository.findOne({
             where: {
-                price: MoreThanOrEqual(this.price.price*(1+this.limitWin)),
+                price: MoreThanOrEqual(this.price.price * (1 + this.limitWin)),
                 ticker,
             },
             order: {
@@ -130,24 +139,24 @@ export default class BinanceService {
         // const trends = await this.getGoogleTrendsPossible(targetPrice.updatedDate, new Date());
         const trends = await this.getGoogleTrendsPossible(new Date('2020-5-4'), new Date());
         console.log(trends);
-        
+
         //取google trends的平均数.
         //计算高于目标价格出现的频率，和总获取价格频率的比例
         const allShow = await this.possibleRepository.createQueryBuilder('coin_price_possible')
-        .where("ticker=:ticker", {price: this.price.price*(1+this.limitWin), ticker})
-        .select('SUM(coin_price_possible.showTimes)').getRawOne();
+            .where("ticker=:ticker", { price: this.price.price * (1 + this.limitWin), ticker })
+            .select('SUM(coin_price_possible.showTimes)').getRawOne();
 
-        console.log({allShow});
+        console.log({ allShow });
 
         const targetShow = await this.possibleRepository.createQueryBuilder('coin_price_possible')
-        .where("price>=:price, ticker=:ticker", {price: this.price.price*(1+this.limitWin), ticker})
-        .select('SUM(coin_price_possible.showTimes)').getRawOne();
+            .where("price>=:price, ticker=:ticker", { price: this.price.price * (1 + this.limitWin), ticker })
+            .select('SUM(coin_price_possible.showTimes)').getRawOne();
 
-        console.log({allShow, targetShow});
-        
+        console.log({ allShow, targetShow });
+
 
         //频率比例， 上涨可能性，google trends平均数，三者的平均数来确定最终概率.
-        if(allPossible === 0){
+        if (allPossible === 0) {
             return 0;
         }
         return this.price.upPercentTimes / allPossible;
@@ -183,7 +192,7 @@ export default class BinanceService {
             if (isStarted === '0') {
                 return clearInterval(timer);
             }
-            
+
             await this.getCurrentPrice(ticker);
             console.log('当前价格', this.price.price);
             const canBuy = await this.canBuy(ticker);
