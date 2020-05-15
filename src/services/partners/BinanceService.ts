@@ -127,7 +127,8 @@ export default class BinanceService {
                 updatedDate: "DESC",
             }
         });
-        const trends = await this.getGoogleTrendsPossible(targetPrice.updatedDate, new Date());
+        // const trends = await this.getGoogleTrendsPossible(targetPrice.updatedDate, new Date());
+        const trends = await this.getGoogleTrendsPossible(new Date('2020-5-4'), new Date());
         console.log(trends);
         
         //取google trends的平均数.
