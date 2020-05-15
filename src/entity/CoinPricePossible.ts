@@ -27,6 +27,9 @@ export class CoinPricePossible {
     @Column({type: 'int', nullable: false, default: 0})
     downPercentTimes: number;
 
+    @Column({type: 'int', nullable: false, default: 0})
+    showTimes: number;
+
     @UpdateDateColumn()
     updatedDate: Date;
     

@@ -22,12 +22,6 @@ export class CoinPrice {
     @Column()
     ticker: string;
 
-    @Column({type: 'int', nullable: false, default: 0})
-    up20PercentTimes: number;
-
-    @Column({type: 'int', nullable: false, default: 0})
-    down10PercentTimes: number;
-
     @UpdateDateColumn()
     updatedDate: Date;
     

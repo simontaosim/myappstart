@@ -3,6 +3,9 @@ import { CoinPrice } from "../../entity/CoinPrice";
 import { getKey, putKey } from "../utils/cache";
 import { CoinPricePossible } from "../../entity/CoinPricePossible";
 
+const googleTrends = require('google-trends-api');
+const Binance = require('node-binance-api');
+
 export default class BinanceService {
     private binance: any;
     public currentPrice: number;
@@ -19,7 +22,6 @@ export default class BinanceService {
     constructor(repository: any, possibleRepository:any) {
         this.repository = repository;
         this.possibleRepository = possibleRepository;
-        const Binance = require('node-binance-api');
         this.binance = new Binance().options({
             APIKEY: 'lR7PKoiFSubZqjdtokWDexSYA2JrPhvToZfUGlxLYpSWjfBwxNSfxFFOtzYuDT7E',
             APISECRET: 'A1fqkdb9hNTlt1Q1rjD1Bs4SaRZlinJvQId4UhV9ggoWwbsjqs2Sh1Y97Fx5WyIt'
@@ -79,9 +81,13 @@ export default class BinanceService {
                 newPricePossible = this.possibleRepository.create({
                     price: newPriceNumber,
                     ticker,
+                    showTimes: 1,
                 });
-                await this.possibleRepository.save(newPricePossible);
+            }else {
+                newPricePossible.showTimes +=1;
             }
+            await this.possibleRepository.save(newPricePossible);
+
 
             this.price = newPricePossible;
 
@@ -95,11 +101,51 @@ export default class BinanceService {
 
     }
 
+    getGoogleTrendsPossible = async  (startTime: Date, endTime: Date) => {
+        try {
+            const trends = await  googleTrends.interestOverTime({keyword: "bitcoin price", startTime, endTime, geo: 'global'});
+            return trends;
+        } catch (e) {
+            console.error(e);
+            throw e;
+            
+        }
+    
+       
+    }
+
     calculateWinPossibility = async () => {
         const allPossible = this.price.upPercentTimes + this.price.downPercentTimes;
         if(allPossible === 0){
             return 0;
         }
+        //找出目标价格的最近更新的时间和现在的时间的间隔间，google trends bitcoin price的
+        const targetPrice = await this.possibleRepository.findOne({
+            where: {
+                price: MoreThanOrEqual(this.price.price*(1+this.limitWin)),
+            },
+            order: {
+                updatedDate: "DESC",
+            }
+        });
+        const trends = await this.getGoogleTrendsPossible(targetPrice.updatedDate, new Date());
+        console.log(trends);
+        
+        //取google trends的平均数.
+        //计算高于目标价格出现的频率，和总获取价格频率的比例
+        const allShow = await this.possibleRepository.createQueryBuilder('coin_price_possible')
+        .select('SUM(coin_price_possible.showTimes)').getRawOne();
+
+        console.log({allShow});
+
+        const targetShow = await this.possibleRepository.createQueryBuilder('coin_price_possible')
+        .where("price>=:price", {price: this.price.price*(1+this.limitWin)})
+        .select('SUM(coin_price_possible.showTimes)').getRawOne();
+
+        console.log({allShow, targetShow});
+        
+
+        //频率比例， 上涨可能性，google trends平均数，三者的平均数来确定最终概率.
         return this.price.upPercentTimes / allPossible;
 
     }
