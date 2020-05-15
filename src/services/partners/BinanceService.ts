@@ -114,15 +114,14 @@ export default class BinanceService {
        
     }
 
-    calculateWinPossibility = async () => {
+    calculateWinPossibility = async (ticker) => {
         const allPossible = this.price.upPercentTimes + this.price.downPercentTimes;
-        if(allPossible === 0){
-            return 0;
-        }
+        
         //找出目标价格的最近更新的时间和现在的时间的间隔间，google trends bitcoin price的
         const targetPrice = await this.possibleRepository.findOne({
             where: {
                 price: MoreThanOrEqual(this.price.price*(1+this.limitWin)),
+                ticker,
             },
             order: {
                 updatedDate: "DESC",
@@ -134,24 +133,28 @@ export default class BinanceService {
         //取google trends的平均数.
         //计算高于目标价格出现的频率，和总获取价格频率的比例
         const allShow = await this.possibleRepository.createQueryBuilder('coin_price_possible')
+        .where("ticker=:ticker", {price: this.price.price*(1+this.limitWin), ticker})
         .select('SUM(coin_price_possible.showTimes)').getRawOne();
 
         console.log({allShow});
 
         const targetShow = await this.possibleRepository.createQueryBuilder('coin_price_possible')
-        .where("price>=:price", {price: this.price.price*(1+this.limitWin)})
+        .where("price>=:price, ticker=:ticker", {price: this.price.price*(1+this.limitWin), ticker})
         .select('SUM(coin_price_possible.showTimes)').getRawOne();
 
         console.log({allShow, targetShow});
         
 
         //频率比例， 上涨可能性，google trends平均数，三者的平均数来确定最终概率.
+        if(allPossible === 0){
+            return 0;
+        }
         return this.price.upPercentTimes / allPossible;
 
     }
 
-    canBuy = async () => {
-        this.possible = await this.calculateWinPossibility();
+    canBuy = async (ticker) => {
+        this.possible = await this.calculateWinPossibility(ticker);
         if (this.possible >= this.winPossibility) {
             return {
                 price: this.currentPrice,
@@ -182,7 +185,7 @@ export default class BinanceService {
             
             await this.getCurrentPrice(ticker);
             console.log('当前价格', this.price.price);
-            const canBuy = await this.canBuy();
+            const canBuy = await this.canBuy(ticker);
             if (canBuy) {
                 console.log(canBuy);
             } else {
