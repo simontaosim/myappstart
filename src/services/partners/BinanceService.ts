@@ -95,7 +95,7 @@ export default class BinanceService {
         console.log("開始計算當前價格的概率", price);
         const allPossible = price.upPercentTimes + price.downPercentTimes;
         const  numeral = require('numeral');
-        const currentPrice = numeral(price.price).value;
+        const currentPrice = numeral(price.price).value();
         console.log(currentPrice);
         const allShow = await this.possibleRepository.createQueryBuilder('coin_price_possible')
             .where("ticker=:ticker", { ticker })
