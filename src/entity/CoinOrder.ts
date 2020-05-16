@@ -37,7 +37,7 @@ export class CoinOrder {
     @Column({default: false})
     isSuccess: boolean;
 
-    @Column({nullable: true, type: 'float'})
+    @Column({nullable: true, type: 'numeric'})
     profit: number
 
 

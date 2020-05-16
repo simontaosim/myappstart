@@ -147,7 +147,7 @@ export default class BinanceService {
         const updateOrder = async  (orders: CoinOrder[]) => {
             for (let index = 0; index < orders.length; index++) {
                 const order = orders[index];
-                const profit = numeral(order.cost).value()- (order.quantity*numeral(order.price).value());
+                const profit = numeral(order.cost).value()- (Number.parseFloat(order.quantity.toString())*numeral(order.price).value());
                 order.isBack = true;
                 order.profit = profit;
                 await this.orderRepository.save(order);
@@ -155,7 +155,7 @@ export default class BinanceService {
                 const backMoney = numeral(order.cost).value()+numeral(order.cost).value();
                 const moneyPositionStr = await getKey(`all_money_position_${ticker}`);
                 let moneyPosition = Number.parseFloat(moneyPositionStr);
-                moneyPosition += backMoney;
+                moneyPosition = moneyPosition + Number.parseFloat(backMoney.toString());
                 console.log("此單獲益",profit.toString());
                 console.log("當前倉位", moneyPosition);
                 await putKey(`all_money_position_${ticker}`, moneyPosition.toString());
@@ -238,7 +238,7 @@ export default class BinanceService {
                     putKey(usedMoneyKey, allMoney.toString());
                 }
                 const positionStr = await getKey(`all_money_position_${ticker}`);
-                const newPosition = Number.parseFloat(positionStr) - moneyToPut;
+                const newPosition = Number.parseFloat(positionStr) - Number.parseFloat(moneyToPut.toString());
                 console.log("當前倉位", newPosition);
                 await putKey(`all_money_position_${ticker}`, newPosition.toString());
             }
