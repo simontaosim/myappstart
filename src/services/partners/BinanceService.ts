@@ -162,12 +162,14 @@ export default class BinanceService {
         let orders = await  this.orderRepository.find({
             limitLoss: LessThanOrEqual(price.price),
             ticker,
+            isBack: false,
         })
         await updateOrder(orders);
      
         orders = await this.orderRepository.find({
             limitWin: MoreThanOrEqual(price.price),
             ticker,
+            isBack: false,
         })
         await updateOrder(orders);
 
