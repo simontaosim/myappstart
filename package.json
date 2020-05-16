@@ -59,6 +59,9 @@
       "dev": "yarn seed-dev && yarn dev-server",
       "build": "rimraf ./build && tsc && yarn seed-pro",
       "start": "NODE_ENV=production node build/index.js ",
-      "test-auto-trade": "NODE_ENV=development  ts-node  src/startAutoTrader.ts"
-   }
+   },
+   "nodemonConfig": {
+      "ignore": ["cache/*", "docs/*", "node_modules/*", "upload/*"],
+      "delay": "2500"
+    }
 }
