@@ -7,7 +7,7 @@ import { CoinPricePossible } from "./entity/CoinPricePossible";
 async function start(){
     const connection: Connection = await createConnection(process.env.NODE_ENV || 'development');
    
-    const service = new BinanceService(connection: Connection);
+    const service = new BinanceService(connection);
     service.startAutoTrade("BTCUSDT");
 }
 
