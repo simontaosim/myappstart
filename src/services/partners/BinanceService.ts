@@ -98,6 +98,9 @@ export default class BinanceService {
             .where("ticker=:ticker", { ticker })
             .select('SUM(coin_price_possible.showTimes)').getRawOne();
 
+            console.log(price.price);
+            console.log(price.price.toString());
+            console.log(price.price*(1 + this.limitWin));
         const targetShow = await this.possibleRepository.createQueryBuilder('coin_price_possible')
             .where("price>=:price and ticker=:ticker", { price: Number.parseFloat(price.price.toString()) * (1 + this.limitWin), ticker })
             .select('SUM(coin_price_possible.showTimes)').getRawOne();
