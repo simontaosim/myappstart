@@ -19,6 +19,15 @@ export class CoinOrder {
     @Column({type: 'money', nullable: true})
     cost: number;
 
+    @Column({type: 'money', nullable: false})
+    limitWin: number;
+
+    @Column({type: 'money', nullable: false})
+    limitLoss: number;
+
+    @Column({type: 'float', nullable: false})
+    quantity: number
+
     @Column()
     ticker: string;
 
