@@ -1,9 +1,9 @@
-import { Repository, LessThanOrEqual, LessThan, MoreThan, MoreThanOrEqual } from "typeorm";
+import { Repository, LessThanOrEqual, LessThan, MoreThan, MoreThanOrEqual, Connection } from "typeorm";
 import { CoinPrice } from "../../entity/CoinPrice";
 import { getKey, putKey } from "../utils/cache";
 import { CoinPricePossible } from "../../entity/CoinPricePossible";
+import { CoinOrder } from "../../entity/CoinOrder";
 
-const googleTrends = require('google-trends-api');
 const Binance = require('node-binance-api');
 
 export default class BinanceService {
@@ -13,15 +13,21 @@ export default class BinanceService {
     private repository: Repository<CoinPrice>;
     private possibleRepository: Repository<CoinPricePossible>
     private price: CoinPricePossible;
+    private orderRepository: Repository<CoinOrder>
 
     //凯利公式定值
     private position = 0.1;
     private winPossibility = 1.01 / 3;
     private limitWin = 0.01;
     private limintLoss = 0.005;
-    constructor(repository: any, possibleRepository: any) {
+    constructor(connection: Connection) {
+        const repository = connection.getRepository(CoinPrice);
+        const possibleRepository = connection.getRepository(CoinPricePossible);
+        const orderRepository = connection.getRepository(CoinOrder);
         this.repository = repository;
         this.possibleRepository = possibleRepository;
+        this.orderRepository = orderRepository;
+
         this.binance = new Binance().options({
             APIKEY: 'lR7PKoiFSubZqjdtokWDexSYA2JrPhvToZfUGlxLYpSWjfBwxNSfxFFOtzYuDT7E',
             APISECRET: 'A1fqkdb9hNTlt1Q1rjD1Bs4SaRZlinJvQId4UhV9ggoWwbsjqs2Sh1Y97Fx5WyIt'
@@ -47,7 +53,7 @@ export default class BinanceService {
                     ticker,
                 },
                 order: {
-                    updatedDate: "DESC",
+                    updatedDate: "ASC",
                 }
 
             })
@@ -64,7 +70,7 @@ export default class BinanceService {
                     ticker,
                 },
                 order: {
-                    updatedDate: "DESC",
+                    updatedDate: "ASC",
                 }
             })
             console.log({ downPercentPrice });
@@ -164,7 +170,7 @@ export default class BinanceService {
             .select('SUM(coin_price_possible.showTimes)').getRawOne();
 
         console.log({ showPossible: targetShow.sum/allShow.sum });
-        if(this.price.upPercentTimes!==0 && allPossible! === 0 ){
+        if(this.price.upPercentTimes!==0 && allPossible! === 0 &&this.price.downPercentTimes !==0 ){
             return  (this.price.upPercentTimes / allPossible+ targetShow.sum/allShow.sum)/2
             
         }
@@ -188,6 +194,13 @@ export default class BinanceService {
             };
         }
         return null;
+    }
+
+    orderOne = async (ticker:string) => {
+            const order = this.orderRepository.create({
+                ticker,
+                price: this.currentPrice,
+            })
     }
 
     startAutoTrade = async (ticker) => {

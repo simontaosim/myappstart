@@ -8,7 +8,7 @@ import {
 
 
 @Entity()
-export class CoinPrice {
+export class CoinOrder {
 
     @PrimaryGeneratedColumn()
     id: number;
