@@ -58,7 +58,7 @@
       "seed-pro": "NODE_ENV=production ts-node ./node_modules/typeorm-seeding/dist/cli.js  seed  -c 'production'",
       "dev": "yarn seed-dev && yarn dev-server",
       "build": "rimraf ./build && tsc && yarn seed-pro",
-      "start": "NODE_ENV=production node build/index.js ",
+      "start": "NODE_ENV=production node build/index.js "
    },
    "nodemonConfig": {
       "ignore": ["cache/*", "docs/*", "node_modules/*", "upload/*"],
