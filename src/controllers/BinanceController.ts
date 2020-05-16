@@ -7,7 +7,7 @@ export default class BinanceController {
     async start(ctx: koa.Context){
         const service = new BinanceService(ctx.DBConnection);
         try {
-            await service.startOrder('BTCUSDT', 156);
+            await service.startOrder('BTCUSDT', 1000);
             ctx.rest({
                 code: "start:trade:success",
             })

@@ -223,8 +223,8 @@ export default class BinanceService {
                     price: numeral(price.price).value(),
                     cost: moneyToPut,
                     quantity: moneyToPut/numeral(price.price).value(),
-                    limitLoss: numeral(price.price).value()*this.limintLoss,
-                    limitWin: numeral(price.price).value()*this.limitWin,
+                    limitLoss: numeral(price.price).value()*(1-this.limintLoss),
+                    limitWin: numeral(price.price).value()*(1+this.limitWin),
                     ticker
                 });
                 await this.orderRepository.save(order);
