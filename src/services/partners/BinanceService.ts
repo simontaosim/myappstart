@@ -4,6 +4,7 @@ import { CoinPricePossible } from "../../entity/CoinPricePossible";
 import { CoinOrder } from "../../entity/CoinOrder";
 
 const Binance = require('node-binance-api');
+const  numeral = require('numeral');
 
 export default class BinanceService {
     private binance: any;
@@ -94,7 +95,7 @@ export default class BinanceService {
     calculateWinPossibility = async (ticker: string, price: CoinPricePossible) => {
         console.log("開始計算當前價格的概率", price);
         const allPossible = price.upPercentTimes + price.downPercentTimes;
-        const  numeral = require('numeral');
+      
         const currentPrice = numeral(price.price).value();
         console.log(currentPrice);
         const allShow = await this.possibleRepository.createQueryBuilder('coin_price_possible')
@@ -146,10 +147,10 @@ export default class BinanceService {
             for (let index = 0; index < orders.length; index++) {
                 const order = orders[index];
                 order.isBack = true;
-                order.profit = order.cost - (order.quantity*order.price)
+                order.profit = numeral(order.cost).value()- (order.quantity*numeral(order.price).value())
                 await this.orderRepository.save(order);
                 //處理倉位
-                const backMoney = order.cost+order.profit;
+                const backMoney = numeral(order.cost).value()+numeral(order.cost).value();
                 const moneyPositionStr = await getKey(`all_money_position_${ticker}`);
                 let moneyPosition = Number.parseFloat(moneyPositionStr);
                 moneyPosition += backMoney;
@@ -214,11 +215,11 @@ export default class BinanceService {
             const canBuy = await  this.canBuy(ticker, price);
             if(canBuy){
                 const order = this.orderRepository.create({
-                    price: price.price,
+                    price: numeral(price.price).value(),
                     cost: moneyToPut,
-                    quantity: moneyToPut/price.price,
-                    limitLoss: price.price*this.limintLoss,
-                    limitWin: price.price*this.limitWin,
+                    quantity: moneyToPut/numeral(price.price).value(),
+                    limitLoss: numeral(price.price).value()*this.limintLoss,
+                    limitWin: numeral(price.price).value()*this.limitWin,
                     ticker
                 });
                 await this.orderRepository.save(order);
