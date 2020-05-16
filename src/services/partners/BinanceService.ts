@@ -94,15 +94,14 @@ export default class BinanceService {
     calculateWinPossibility = async (ticker: string, price: CoinPricePossible) => {
         console.log("開始計算當前價格的概率", price);
         const allPossible = price.upPercentTimes + price.downPercentTimes;
+        const  numeral = require('numeral');
+        let currentPrice = numeral(price.price);
         const allShow = await this.possibleRepository.createQueryBuilder('coin_price_possible')
             .where("ticker=:ticker", { ticker })
             .select('SUM(coin_price_possible.showTimes)').getRawOne();
 
-            console.log(price.price);
-            console.log(price.price.toString());
-            console.log(price.price*(1 + this.limitWin));
         const targetShow = await this.possibleRepository.createQueryBuilder('coin_price_possible')
-            .where("price>=:price and ticker=:ticker", { price: Number.parseFloat(price.price.toString()) * (1 + this.limitWin), ticker })
+            .where("price>=:price and ticker=:ticker", { price: Number.parseFloat(currentPrice.toString()) * (1 + this.limitWin), ticker })
             .select('SUM(coin_price_possible.showTimes)').getRawOne();
 
         console.log({ showPossible: targetShow.sum / allShow.sum });

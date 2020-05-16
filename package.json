@@ -42,6 +42,7 @@
       "mochawesome": "^5.0.0",
       "node-binance-api": "^0.11.4",
       "node-fetch": "^2.6.0",
+      "numeral": "^2.0.6",
       "pg": "^8.0.3",
       "reflect-metadata": "^0.1.10",
       "remove-blank-lines": "^1.4.0",
