@@ -92,6 +92,7 @@ export default class BinanceService {
     }
 
     calculateWinPossibility = async (ticker: string, price: CoinPricePossible) => {
+        console.log("開始計算當前價格的概率", price);
         const allPossible = price.upPercentTimes + price.downPercentTimes;
         const allShow = await this.possibleRepository.createQueryBuilder('coin_price_possible')
             .where("ticker=:ticker", { ticker })
