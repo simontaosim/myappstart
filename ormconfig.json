@@ -32,8 +32,12 @@
    },
    {
       "name": "test",
-      "type": "sqlite",
-      "database": "database.test.sqlite",
+      "type": "postgres",
+      "host": "localhost",
+      "port": 5432,
+      "username": "postgres",
+      "password": "123666",
+      "database": "appstart_test",
       "synchronize": true,
       "logging": true,
       "entities": [

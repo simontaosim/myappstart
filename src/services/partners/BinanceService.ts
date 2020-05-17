@@ -96,7 +96,7 @@ export default class BinanceService {
         console.log("開始計算當前價格的概率", price);
         const allPossible = price.upPercentTimes + price.downPercentTimes;
       
-        const currentPrice = numeral(price.price).value();
+        const currentPrice = price.price;
         console.log(currentPrice);
         const allShow = await this.possibleRepository.createQueryBuilder('coin_price_possible')
             .where("ticker=:ticker", { ticker })
@@ -110,8 +110,8 @@ export default class BinanceService {
         if (price.upPercentTimes !== 0 && allPossible! === 0 && price.downPercentTimes !== 0) {
             return (price.upPercentTimes / allPossible + targetShow.sum / allShow.sum) / 2
         }
-        return (targetShow.sum / allShow.sum) 
-        // return (targetShow.sum / allShow.sum) / 2
+        // return (targetShow.sum / allShow.sum) 
+        return (targetShow.sum / allShow.sum) / 2
 
         //频率比例， 上涨可能性，二者的平均数来确定最终概率.
 
@@ -147,15 +147,15 @@ export default class BinanceService {
         const updateOrder = async  (orders: CoinOrder[]) => {
             for (let index = 0; index < orders.length; index++) {
                 const order = orders[index];
-                const profit = numeral(order.cost).value()- (Number.parseFloat(order.quantity.toString())*numeral(order.price).value());
+                const profit = order.quantity*order.price - order.cost;
                 order.isBack = true;
                 order.profit = profit;
                 await this.orderRepository.save(order);
                 //處理倉位
-                const backMoney = numeral(order.cost).value()+numeral(order.cost).value();
+                const backMoney =order.cost + profit;
                 const moneyPositionStr = await getKey(`all_money_position_${ticker}`);
                 let moneyPosition = Number.parseFloat(moneyPositionStr);
-                moneyPosition = moneyPosition + Number.parseFloat(backMoney.toString());
+                moneyPosition = moneyPosition + backMoney;
                 console.log("此單獲益",profit.toString());
                 console.log("當前倉位", moneyPosition);
                 await putKey(`all_money_position_${ticker}`, moneyPosition.toString());
@@ -221,11 +221,11 @@ export default class BinanceService {
             if(canBuy){
                 console.log('可以購買，開始下單');
                 const order = this.orderRepository.create({
-                    price: numeral(price.price).value(),
+                    price: price.price,
                     cost: moneyToPut,
-                    quantity: moneyToPut/numeral(price.price).value(),
-                    limitLoss: numeral(price.price).value()*(1-this.limintLoss),
-                    limitWin: numeral(price.price).value()*(1+this.limitWin),
+                    quantity: moneyToPut/price.price,
+                    limitLoss: price.price*(1-this.limintLoss),
+                    limitWin: price.price*(1+this.limitWin),
                     ticker
                 });
                 await this.orderRepository.save(order);

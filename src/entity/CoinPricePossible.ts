@@ -18,7 +18,7 @@ export class CoinPricePossible {
     @Column()
     ticker: string;
 
-    @Column({type: 'money', nullable:false})
+    @Column({type: 'numeric', nullable:false})
     price: number;
 
     @Column({type: 'int', nullable: false, default: 0})
