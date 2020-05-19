@@ -21,7 +21,6 @@ import PostController from './controllers/PostController';
 import BinanceController from './controllers/BinanceController';
 import { Socket } from 'socket.io';
 import * as http from 'http';
-import BinanceService from './services/partners/BinanceService';
 import UserService from './services/daos/UserService';
 import RoleService from './services/daos/RoleService';
 
@@ -71,8 +70,6 @@ export default class App {
         this.server.use(this.router.routes()).use(this.router.allowedMethods());
         const server = http.createServer(this.server.callback());
         this.io = require('socket.io')(server);
-        const binanceService = new BinanceService(connection);
-        await binanceService.startGetPrices("BTCUSDT", this.io);
         //seed;
         const roleService = new RoleService(connection);
         await roleService.findOrCreateNobody();
