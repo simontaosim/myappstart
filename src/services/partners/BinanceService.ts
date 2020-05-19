@@ -2,6 +2,7 @@ import { Repository, LessThanOrEqual, LessThan, MoreThanOrEqual, Connection } fr
 import { getKey, putKey } from "../utils/cache";
 import { CoinPricePossible } from "../../entity/CoinPricePossible";
 import { CoinOrder } from "../../entity/CoinOrder";
+import { Socket } from "socket.io";
 
 const Binance = require('node-binance-api');
 const  numeral = require('numeral');
@@ -29,7 +30,7 @@ export default class BinanceService {
         });
     }
 
-    getCurrentPrice = async (ticker: string) => {
+    getCurrentPrice = async (ticker: string, io:Socket) => {
         try {
             const prices = await this.binance.futuresPrices();
             let newPriceNumber = Number.parseFloat(prices[ticker]);
@@ -84,6 +85,7 @@ export default class BinanceService {
                 up: upPercentPrice,
                 down: downPercentPrice,
             });
+            io.emit('lastestPrice', newPricePossible);
             
         } catch (e) {
             console.error(e);
@@ -127,7 +129,7 @@ export default class BinanceService {
         return null;
     }
 
-    startGetPrices = async (ticker: string) => {
+    startGetPrices = async (ticker: string, io:Socket) => {
         const startKey = `is_${ticker}_start`;
         const isStarted = await getKey(startKey);
         if (isStarted === '0' || !isStarted) {
@@ -139,7 +141,7 @@ export default class BinanceService {
             if (isStarted === '0') {
                 return clearInterval(timer);
             }
-            await this.getCurrentPrice(ticker);
+            await this.getCurrentPrice(ticker, io);
         }, 3000)
     }
 

@@ -11,7 +11,7 @@ export default class PermissionController{
     async create(ctx: koa.Context){
         
         try {
-            let  createParams  = ctx.request.body; 
+            let  createParams  = (ctx.request as any).body; 
             const restService = new RestService("permissions", ctx.DBConnection);
             const repository = ctx.DBConnection.getRepository(Permission);
             let data = await repository.findOne({

@@ -5,6 +5,11 @@ import { RESOURCES } from '../constants';
 
 
 export default async function resourceAccess(ctx: koa.Context, next: koa.Next) {
+    console.log("access", ctx.path);
+    
+    if(ctx.path.includes('socket.io')){
+        return await next();
+    }
     const elements = ctx.path.split('/')
     const method = ctx.request.method;
     const resource = elements[1];

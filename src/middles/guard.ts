@@ -10,6 +10,8 @@ import { PostTag } from '../entity/PostTag';
 
 
 export default async function (ctx: koa.Context, next: koa.Next ){
+    console.log("guard", ctx.path);
+
     if(ctx.acl){
         const ACLParams: IACLParams = ctx.acl;
         const resourceModel ={ 

@@ -7,3 +7,5 @@ temp/
 cache/
 database.*.sqlite
 upload/
+yarn.lock
+yarn.error.log
