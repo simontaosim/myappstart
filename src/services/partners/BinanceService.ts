@@ -27,9 +27,13 @@ export default class BinanceService {
             APIKEY: 'lR7PKoiFSubZqjdtokWDexSYA2JrPhvToZfUGlxLYpSWjfBwxNSfxFFOtzYuDT7E',
             APISECRET: 'A1fqkdb9hNTlt1Q1rjD1Bs4SaRZlinJvQId4UhV9ggoWwbsjqs2Sh1Y97Fx5WyIt'
         });
+        let oldPrice = 0;
         this.binance.websockets.bookTickers('BTCUSDT', async (ticker:any, error:any)=>{
             if(!error){
                 let newPriceNumber = Number.parseFloat(ticker.bestBid);
+                if(newPriceNumber === oldPrice){
+                    return false;
+                }
                 try {
                     const upPercentPrice = await this.possibleRepository.findOne({
                         where: {
@@ -71,10 +75,12 @@ export default class BinanceService {
                             ticker: 'BTCUSDT',
                             showTimes: 1,
                         });
+                        await this.possibleRepository.save(newPricePossible);
                     } else {
                         newPricePossible.showTimes += 1;
+                        await this.possibleRepository.save(newPricePossible);
                     }
-                    await this.possibleRepository.save(newPricePossible);
+                    
                     await putKey(`current_${ticker}_price`, newPriceNumber.toString());
                     console.log({
                         up: upPercentPrice,
@@ -88,6 +94,7 @@ export default class BinanceService {
                         const startMoney = Number.parseFloat(isStarted);
                         this.startOrder('BTCUSDT',startMoney, io, newPricePossible);
                     }
+                    oldPrice = newPriceNumber;
                 } catch (error) {
                     if(error.detail.includes("already exists")){
                         console.log('补上没有写入的');
