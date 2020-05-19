@@ -36,7 +36,7 @@ export default class BinanceService {
                         where: {
                             price: LessThanOrEqual(newPriceNumber / (1 + this.limitWin)),
                             updatedDate: LessThan(new Date()),
-                            ticker,
+                            ticker:'BTCUSDT',
                         },
                         order: {
                             updatedDate: "ASC",
@@ -50,7 +50,7 @@ export default class BinanceService {
                         where: {
                             price: MoreThanOrEqual(newPriceNumber / (1 - this.limintLoss)),
                             updatedDate: LessThan(new Date()),
-                            ticker,
+                            ticker: 'BTCUSDT',
                         },
                         order: {
                             updatedDate: "ASC",
@@ -63,13 +63,13 @@ export default class BinanceService {
                     let newPricePossible = await this.possibleRepository.findOne({
                         where: {
                             price: newPriceNumber,
-                            ticker,
+                            ticker: 'BTCUSDT',
                         }
                     })
                     if (!newPricePossible) {
                         newPricePossible = this.possibleRepository.create({
                             price: newPriceNumber,
-                            ticker,
+                            ticker: 'BTCUSDT',
                             showTimes: 1,
                         });
                     } else {
