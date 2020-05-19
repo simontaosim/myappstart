@@ -71,8 +71,8 @@ export default class App {
         this.io = require('socket.io')(server);
         const binanceService = new BinanceService(connection);
         await binanceService.startGetPrices("BTCUSDT", this.io);
-        server.listen(8080, () => {
-            console.log('server start at', 8080);
+        server.listen(9987, () => {
+            console.log('server start at', 9987);
         })
     }
     async stop() {
