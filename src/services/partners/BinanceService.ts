@@ -30,7 +30,6 @@ export default class BinanceService {
         this.binance.websockets.bookTickers('BTCUSDT', async (ticker:any, error:any)=>{
             if(!error){
                 let newPriceNumber = Number.parseFloat(ticker.bestBid);
-                newPriceNumber = Number.parseFloat(newPriceNumber.toFixed(2));
                 try {
                     const upPercentPrice = await this.possibleRepository.findOne({
                         where: {
@@ -99,8 +98,11 @@ export default class BinanceService {
                                 ticker: 'BTCUSDT',
                             }
                         })
-                        missingPrice.showTimes += 1;
-                        await this.possibleRepository.save(missingPrice)
+                        if(missingPrice){
+                            missingPrice.showTimes += 1;
+                            await this.possibleRepository.save(missingPrice)
+                        }
+                        
                     }
                     
                 }
