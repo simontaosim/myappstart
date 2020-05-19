@@ -32,8 +32,12 @@
    },
    {
       "name": "test",
-      "type": "sqlite",
-      "database": "database.test.sqlite",
+      "type": "postgres",
+      "host": "localhost",
+      "port": 5432,
+      "username": "postgres",
+      "password": "123666",
+      "database": "appstart_test",
       "synchronize": true,
       "logging": true,
       "entities": [
@@ -54,9 +58,11 @@
    {
       "name": "production",
       "type": "postgres",
+      "host": "localhost",
+      "port": 5432,
       "username": "postgres",
       "password": "123666",
-      "database": "appstart_dev",
+      "database": "appstart_pro",
       "synchronize": true,
       "logging": true,
       "entities": [
@@ -69,10 +75,10 @@
          "build/subscriber/**/*{.ts,.js}"
       ],
       "seeds": [
-         "build/seeds/**/*{.ts,.js}"
+         "src/seeds/**/*{.ts,.js}"
       ],
       "factories": [
-         "build/factories/**/*{.ts,.js}"
+         "src/factories/**/*{.ts,.js}"
       ],
       "cli": {
          "entitiesDir": "build/entity",

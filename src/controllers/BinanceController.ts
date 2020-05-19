@@ -1,15 +1,33 @@
 import * as koa from 'koa';
 import {  httpPost, httpGet } from "../decorators/HttpRoutes";
+import BinanceService from '../services/partners/BinanceService';
 
 export default class BinanceController {
-    @httpGet("/binance")
-    async binance(ctx: koa.Context){
-        const Binance = require('node-binance-api');
-        const binance = new Binance().options({
-        APIKEY: 'lR7PKoiFSubZqjdtokWDexSYA2JrPhvToZfUGlxLYpSWjfBwxNSfxFFOtzYuDT7E',
-        APISECRET: 'A1fqkdb9hNTlt1Q1rjD1Bs4SaRZlinJvQId4UhV9ggoWwbsjqs2Sh1Y97Fx5WyIt'
-        });
-        const prices =  await binance.futuresPrices();
-        ctx.body = prices;
-    }   
+    @httpGet("/trade/start")
+    async start(ctx: koa.Context){
+        const service = new BinanceService(ctx.DBConnection);
+        try {
+            await service.startOrder('BTCUSDT', 1000);
+            ctx.rest({
+                code: "start:trade:success",
+            })
+        
+        } catch (e) {
+            throw e;
+        }
+    } 
+    @httpGet("/trade/stop")
+    async stop(ctx: koa.Context){
+        const service = new BinanceService(ctx.DBConnection);
+        try {
+            await service.stopOrder('BTCUSDT');
+
+            ctx.rest({
+                code: "stop:trade:success",
+            })
+        
+        } catch (e) {
+            throw e;
+        }
+    } 
 }

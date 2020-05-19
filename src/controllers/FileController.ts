@@ -1,16 +1,13 @@
 import * as koa from 'koa';
 import * as uuid from 'uuid';
 import { httpPost, httpGet } from "../decorators/HttpRoutes";
-import ipfsnode from '../utils/ipfsnode';
 import * as fs from 'fs';
 import * as mkdirp from 'mkdirp';
-import * as FileType from 'file-type';
 export default class FileController {
     @httpPost("/upload")
     async upload(ctx: koa.Context) {
         let filename = uuid.v4();
         const file = (ctx.request as any).files.file ;
-        console.log(file);
         
         const ext = file.name.split('.').pop();
         filename = filename+'.'+ext ;
@@ -22,6 +19,7 @@ export default class FileController {
         }
         let filePath = "";
         try {
+            const FileType = require('file-type');
             const fileType = await FileType.fromStream(fs.createReadStream(file.path));
 
             if (fileType.mime.includes('image')) {
@@ -34,7 +32,7 @@ export default class FileController {
                 filePath = `/others/${filename}`;
             }
             const readStream = fs.createReadStream(file.path);
-            const writeStream = fs.createWriteStream(`upload/${filePath}`);
+            const writeStream = fs.createWriteStream(`upload${filePath}`);
             readStream.pipe(writeStream);
             ctx.rest({
                 filePath: `file${filePath}`,

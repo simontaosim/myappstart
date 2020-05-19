@@ -25,6 +25,7 @@
       "@types/koa-router": "^7.4.0",
       "@types/koa__cors": "^3.0.1",
       "@types/node-fetch": "^2.5.5",
+      "@types/socket.io": "^2.1.6",
       "@types/uuid": "^7.0.3",
       "bcrypt": "^4.0.1",
       "crypto-random-string": "^3.2.0",
@@ -32,7 +33,6 @@
       "g-trends": "^0.0.7",
       "google-trends-api": "^4.9.0",
       "http-graceful-shutdown": "^2.3.2",
-      "ipfs": "^0.43.3",
       "jsonwebtoken": "^8.5.1",
       "koa": "^2.11.0",
       "koa-body": "^4.1.1",
@@ -42,22 +42,28 @@
       "mochawesome": "^5.0.0",
       "node-binance-api": "^0.11.4",
       "node-fetch": "^2.6.0",
+      "numeral": "^2.0.6",
       "pg": "^8.0.3",
       "reflect-metadata": "^0.1.10",
       "remove-blank-lines": "^1.4.0",
-      "sqlite3": "^4.0.3",
+      "socket.io": "^2.3.0",
       "striptags": "^3.1.1",
       "typeorm": "0.2.24",
       "typeorm-seeding": "^1.4.0"
    },
    "scripts": {
       "dev-server": "NODE_ENV=development nodemon  -e  ts  --exec ts-node  src/index.ts",
-      "test": "NODE_ENV=test mocha   --reporter mochawesome",
-      "seed-dev": "ts-node ./node_modules/typeorm-seeding/dist/cli.js  seed  -c 'development'",
-      "seed-pro": "NODE_ENV=production ts-node ./node_modules/typeorm-seeding/dist/cli.js  seed  -c 'production'",
-      "dev": "yarn seed-dev && yarn dev-server",
-      "build": "rimraf ./build && tsc && yarn seed-pro",
-      "start": "NODE_ENV=production node build/index.js ",
-      "test-auto-trade": "NODE_ENV=development  ts-node  src/startAutoTrader.ts"
-   }
+      "test": "rm -rf cache && NODE_ENV=test mocha   --reporter mochawesome",
+      "seed-dev": "rm -rf cache && ts-node ./node_modules/typeorm-seeding/dist/cli.js  seed  -c 'development'",
+      "seed:config": "ts-node ./node_modules/typeorm-seeding/dist/cli.js  --connection 'production' config",
+      "seed-pro": "ts-node ./node_modules/typeorm-seeding/dist/cli.js  seed  -c 'production' -n ormconfig.json",
+      "seed-test": "ts-node ./node_modules/typeorm-seeding/dist/cli.js  seed  -c 'test' -n ormconfig.json",
+      "dev": "rm -rf cache  && yarn dev-server",
+      "build": "rimraf ./build && tsc",
+      "start": "rm -rf cache  && NODE_ENV=production node build/index.js "
+   },
+   "nodemonConfig": {
+      "ignore": ["cache/*", "docs/*", "node_modules/*", "upload/*"],
+      "delay": "2500"
+    }
 }

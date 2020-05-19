@@ -8,16 +8,25 @@ import {
 
 
 @Entity()
-export class CoinPrice {
+export class CoinOrder {
 
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({type: 'money', nullable: false})
+    @Column({type: 'numeric', nullable: false})
     price: number;
 
-    @Column({type: 'money', nullable: true})
+    @Column({type: 'numeric', nullable: true})
     cost: number;
+
+    @Column({type: 'numeric', nullable: false})
+    limitWin: number;
+
+    @Column({type: 'numeric', nullable: false})
+    limitLoss: number;
+
+    @Column({type: 'numeric', nullable: false})
+    quantity: number
 
     @Column()
     ticker: string;
@@ -28,7 +37,7 @@ export class CoinPrice {
     @Column({default: false})
     isSuccess: boolean;
 
-    @Column({nullable: true, type: 'money'})
+    @Column({nullable: true, type: 'numeric'})
     profit: number
 
 
