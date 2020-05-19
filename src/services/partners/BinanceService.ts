@@ -90,7 +90,18 @@ export default class BinanceService {
                         this.startOrder('BTCUSDT',startMoney, io, newPricePossible);
                     }
                 } catch (error) {
-                    console.error(error);
+                    if(error.detail.includes("already exists")){
+                        console.log('补上没有写入的');
+                        
+                        const missingPrice = await this.possibleRepository.findOne({
+                            where: {
+                                price: newPriceNumber,
+                                ticker: 'BTCUSDT',
+                            }
+                        })
+                        missingPrice.showTimes += 1;
+                        await this.possibleRepository.save(missingPrice)
+                    }
                     
                 }
             }
