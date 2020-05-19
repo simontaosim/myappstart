@@ -141,7 +141,7 @@ export default class BinanceService {
                 return clearInterval(timer);
             }
             await this.getCurrentPrice(ticker, io);
-        }, 3000)
+        }, 500)
     }
 
     sellOutAll = async (ticker: string, price: CoinPricePossible) => {
@@ -245,7 +245,7 @@ export default class BinanceService {
             }
             await this.sellOutAll(ticker, price);
 
-        }, 3000)
+        }, 500)
     }
 
 }
