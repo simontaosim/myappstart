@@ -3,7 +3,6 @@ import * as uuid from 'uuid';
 import { httpPost, httpGet } from "../decorators/HttpRoutes";
 import * as fs from 'fs';
 import * as mkdirp from 'mkdirp';
-import * as FileType from 'file-type';
 export default class FileController {
     @httpPost("/upload")
     async upload(ctx: koa.Context) {
@@ -20,6 +19,7 @@ export default class FileController {
         }
         let filePath = "";
         try {
+            const FileType = require('file-type');
             const fileType = await FileType.fromStream(fs.createReadStream(file.path));
 
             if (fileType.mime.includes('image')) {

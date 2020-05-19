@@ -5,7 +5,6 @@ import { CoinOrder } from "../../entity/CoinOrder";
 import { Socket } from "socket.io";
 
 const Binance = require('node-binance-api');
-const  numeral = require('numeral');
 
 export default class BinanceService {
     private binance: any;
