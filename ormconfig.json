@@ -60,7 +60,7 @@
       "type": "postgres",
       "username": "postgres",
       "password": "123666",
-      "database": "appstart_dev",
+      "database": "appstart_pro",
       "synchronize": true,
       "logging": true,
       "entities": [
