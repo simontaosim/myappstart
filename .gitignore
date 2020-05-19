@@ -9,3 +9,4 @@ database.*.sqlite
 upload/
 yarn.lock
 yarn-error.log
+mochawesome-report
