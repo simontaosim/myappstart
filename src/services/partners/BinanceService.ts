@@ -98,7 +98,6 @@ export default class BinanceService {
         const allPossible = price.upPercentTimes + price.downPercentTimes;
       
         const currentPrice = price.price;
-        console.log(currentPrice);
         const allShow = await this.possibleRepository.createQueryBuilder('coin_price_possible')
             .where("ticker=:ticker", { ticker })
             .select('SUM(coin_price_possible.showTimes)').getRawOne();
@@ -108,7 +107,8 @@ export default class BinanceService {
             .select('SUM(coin_price_possible.showTimes)').getRawOne();
 
         console.log({ showPossible: targetShow.sum / allShow.sum });
-        if (price.upPercentTimes !== 0 && allPossible! === 0 && price.downPercentTimes !== 0) {
+        if (price.upPercentTimes >= 10 && allPossible! === 0 && price.downPercentTimes >= 10) {
+            //数据足够大才有意义
             return (price.upPercentTimes / allPossible + targetShow.sum / allShow.sum) / 2
         }
         // return (targetShow.sum / allShow.sum) 
@@ -141,7 +141,7 @@ export default class BinanceService {
                 return clearInterval(timer);
             }
             await this.getCurrentPrice(ticker, io);
-        }, 500)
+        }, 1500)
     }
 
     sellOutAll = async (ticker: string, price: CoinPricePossible) => {
@@ -245,7 +245,7 @@ export default class BinanceService {
             }
             await this.sellOutAll(ticker, price);
 
-        }, 500)
+        }, 1500)
     }
 
 }
