@@ -54,11 +54,13 @@
    "scripts": {
       "dev-server": "NODE_ENV=development nodemon  -e  ts  --exec ts-node  src/index.ts",
       "test": "rm -rf cache && NODE_ENV=test mocha   --reporter mochawesome",
-      "seed-dev": "ts-node ./node_modules/typeorm-seeding/dist/cli.js  seed  -c 'development'",
-      "seed-pro": "NODE_ENV=production ts-node ./node_modules/typeorm-seeding/dist/cli.js  seed  -c 'production'",
-      "dev": "yarn seed-dev && yarn dev-server",
-      "build": "rimraf ./build && tsc && yarn seed-pro",
-      "start": "NODE_ENV=production node build/index.js "
+      "seed-dev": "rm -rf cache && ts-node ./node_modules/typeorm-seeding/dist/cli.js  seed  -c 'development'",
+      "seed:config": "ts-node ./node_modules/typeorm-seeding/dist/cli.js  --connection 'production' config",
+      "seed-pro": "ts-node ./node_modules/typeorm-seeding/dist/cli.js  seed  -c 'production' -n ormconfig.json",
+      "seed-test": "ts-node ./node_modules/typeorm-seeding/dist/cli.js  seed  -c 'test' -n ormconfig.json",
+      "dev": "rm -rf cache  && yarn dev-server",
+      "build": "rimraf ./build && tsc",
+      "start": "rm -rf cache  && NODE_ENV=production node build/index.js "
    },
    "nodemonConfig": {
       "ignore": ["cache/*", "docs/*", "node_modules/*", "upload/*"],

@@ -58,6 +58,8 @@
    {
       "name": "production",
       "type": "postgres",
+      "host": "localhost",
+      "port": 5432,
       "username": "postgres",
       "password": "123666",
       "database": "appstart_pro",
@@ -73,10 +75,10 @@
          "build/subscriber/**/*{.ts,.js}"
       ],
       "seeds": [
-         "build/seeds/**/*{.ts,.js}"
+         "src/seeds/**/*{.ts,.js}"
       ],
       "factories": [
-         "build/factories/**/*{.ts,.js}"
+         "src/factories/**/*{.ts,.js}"
       ],
       "cli": {
          "entitiesDir": "build/entity",

@@ -71,6 +71,8 @@ export default class UserService {
             username: SUPERADMIN.username,
             isDefault: true,
         })
+        console.log('admin 已存在');
+        
         if(!admin){
             admin =  await this.registerUser({
                 ...SUPERADMIN,

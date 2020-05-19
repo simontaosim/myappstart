@@ -22,6 +22,8 @@ import BinanceController from './controllers/BinanceController';
 import { Socket } from 'socket.io';
 import * as http from 'http';
 import BinanceService from './services/partners/BinanceService';
+import UserService from './services/daos/UserService';
+import RoleService from './services/daos/RoleService';
 
 @registerController(
     [
@@ -70,7 +72,15 @@ export default class App {
         const server = http.createServer(this.server.callback());
         this.io = require('socket.io')(server);
         const binanceService = new BinanceService(connection);
-        await binanceService.startGetPrices("BTCUSDT", this.io);
+        // await binanceService.startGetPrices("BTCUSDT", this.io);
+        //seed;
+        const roleService = new RoleService(connection);
+        await roleService.findOrCreateNobody();
+        await roleService.findOrCreateAdmin();
+        await roleService.findOrCreateRegister();
+        const userService = new UserService(connection);
+        await userService.findOrCreateAdmin();
+        
         server.listen(9987, () => {
             console.log('server start at', 9987);
         })
