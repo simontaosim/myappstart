@@ -32,7 +32,6 @@
       "g-trends": "^0.0.7",
       "google-trends-api": "^4.9.0",
       "http-graceful-shutdown": "^2.3.2",
-      "ipfs": "^0.43.3",
       "jsonwebtoken": "^8.5.1",
       "koa": "^2.11.0",
       "koa-body": "^4.1.1",
@@ -46,7 +45,6 @@
       "pg": "^8.0.3",
       "reflect-metadata": "^0.1.10",
       "remove-blank-lines": "^1.4.0",
-      "sqlite3": "^4.0.3",
       "striptags": "^3.1.1",
       "typeorm": "0.2.24",
       "typeorm-seeding": "^1.4.0"
