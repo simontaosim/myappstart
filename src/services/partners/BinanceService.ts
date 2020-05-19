@@ -31,7 +31,7 @@ export default class BinanceService {
 
     getCurrentPrice = async (ticker: string, io:Socket) => {
         try {
-            const prices = await this.binance.futuresPrices();
+            const prices = await this.binance.prices();
             let newPriceNumber = Number.parseFloat(prices[ticker]);
             newPriceNumber = Number.parseFloat(newPriceNumber.toFixed(2));
             //反向统计避免重复计算； 找出小于当前价格10%的价格；找出大于当前价格5%的价格，并且更新
@@ -88,13 +88,12 @@ export default class BinanceService {
             
         } catch (e) {
             console.error(e);
-            throw e;
         }
 
     }
 
-    calculateWinPossibility = async (ticker: string, price: CoinPricePossible) => {
-        console.log("開始計算當前價格的概率", price);
+    calculateWinPossibility = async (ticker: string, price: CoinPricePossible, io) => {
+        io.emit('currentPrice', price)
         const allPossible = price.upPercentTimes + price.downPercentTimes;
       
         const currentPrice = price.price;
@@ -118,10 +117,10 @@ export default class BinanceService {
 
     }
 
-    canBuy = async (ticker: string, price: CoinPricePossible) => {
-        this.possible = await this.calculateWinPossibility(ticker, price);
+    canBuy = async (ticker: string, price: CoinPricePossible, io:Socket) => {
+        this.possible = await this.calculateWinPossibility(ticker, price, io);
         console.log("最終概率", this.possible);
-        
+        io.emit('currentPossible', this.possible);
         if (this.possible >= this.winPossibility) {
             return true;
         }
@@ -129,6 +128,7 @@ export default class BinanceService {
     }
 
     startGetPrices = async (ticker: string, io:Socket) => {
+        //todo 改造成能够订阅流的方式
         const startKey = `is_${ticker}_start`;
         const isStarted = await getKey(startKey);
         if (isStarted === '0' || !isStarted) {
@@ -144,7 +144,7 @@ export default class BinanceService {
         }, 1500)
     }
 
-    sellOutAll = async (ticker: string, price: CoinPricePossible) => {
+    sellOutAll = async (ticker: string, price: CoinPricePossible, io:Socket) => {
         const updateOrder = async  (orders: CoinOrder[]) => {
             for (let index = 0; index < orders.length; index++) {
                 const order = orders[index];
@@ -189,7 +189,7 @@ export default class BinanceService {
         await putKey(usedMoneyKey, '0');
     }
 
-    startOrder = async (ticker: string, usedMoney: number) => {
+    startOrder = async (ticker: string, usedMoney: number, io:Socket) => {
         await putKey(`all_money_position_${ticker}`, usedMoney.toString());
         //記錄投資過的錢的總數
         const usedMoneyKey: string = `${ticker}_used_money`;
@@ -204,8 +204,10 @@ export default class BinanceService {
         timer = setInterval(async () => {
             const isStarted = await getKey(startKey);
             if (isStarted === '0') {
+                io.emit('isAutoTraderStart', false);
                 return clearInterval(timer);
             }
+            io.emit('isAutoTraderStart', true);
             const moneyToPut = usedMoney*this.position;
             //倉位
             const currentPrice = await getKey(currentPriceKey);
@@ -218,9 +220,10 @@ export default class BinanceService {
                 console.error("price lost, check the getPrices Method");
                 return false;
             }
-            const canBuy = await  this.canBuy(ticker, price);
+            const canBuy = await  this.canBuy(ticker, price, io);
             if(canBuy){
                 console.log('可以購買，開始下單');
+                io.emit('canBuy', true);
                 const order = this.orderRepository.create({
                     price: price.price,
                     cost: moneyToPut,
@@ -242,8 +245,10 @@ export default class BinanceService {
                 const newPosition = Number.parseFloat(positionStr) - Number.parseFloat(moneyToPut.toString());
                 console.log("當前倉位", newPosition);
                 await putKey(`all_money_position_${ticker}`, newPosition.toString());
+            }else{
+                io.emit('canBuy', false);
             }
-            await this.sellOutAll(ticker, price);
+            await this.sellOutAll(ticker, price, io);
 
         }, 1500)
     }
