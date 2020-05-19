@@ -17,7 +17,7 @@ export default class BinanceService {
     private winPossibility = 1.01 / 3;
     private limitWin = 0.01;
     private limintLoss = 0.005;
-    constructor(connection: Connection) {
+    constructor(connection: Connection, io:Socket) {
         const possibleRepository = connection.getRepository(CoinPricePossible);
         const orderRepository = connection.getRepository(CoinOrder);
         this.possibleRepository = possibleRepository;
@@ -27,69 +27,74 @@ export default class BinanceService {
             APIKEY: 'lR7PKoiFSubZqjdtokWDexSYA2JrPhvToZfUGlxLYpSWjfBwxNSfxFFOtzYuDT7E',
             APISECRET: 'A1fqkdb9hNTlt1Q1rjD1Bs4SaRZlinJvQId4UhV9ggoWwbsjqs2Sh1Y97Fx5WyIt'
         });
-    }
-
-    getCurrentPrice = async (ticker: string, io:Socket) => {
-        try {
-            const prices = await this.binance.prices(ticker);
-            let newPriceNumber = Number.parseFloat(prices[ticker]);
-            newPriceNumber = Number.parseFloat(newPriceNumber.toFixed(2));
-            //反向统计避免重复计算； 找出小于当前价格10%的价格；找出大于当前价格5%的价格，并且更新
-            const upPercentPrice = await this.possibleRepository.findOne({
-                where: {
-                    price: LessThanOrEqual(newPriceNumber / (1 + this.limitWin)),
-                    updatedDate: LessThan(new Date()),
-                    ticker,
-                },
-                order: {
-                    updatedDate: "ASC",
+        this.binance.websockets.bookTickers('BTCUSDT', async (ticker:any, error:any)=>{
+            if(!error){
+                let newPriceNumber = Number.parseFloat(ticker.bestBid);
+                newPriceNumber = Number.parseFloat(newPriceNumber.toFixed(2));
+                try {
+                    const upPercentPrice = await this.possibleRepository.findOne({
+                        where: {
+                            price: LessThanOrEqual(newPriceNumber / (1 + this.limitWin)),
+                            updatedDate: LessThan(new Date()),
+                            ticker,
+                        },
+                        order: {
+                            updatedDate: "ASC",
+                        }
+                    })
+                    if (upPercentPrice) {
+                        upPercentPrice.upPercentTimes = upPercentPrice.upPercentTimes + 1;
+                        await this.possibleRepository.save(upPercentPrice);
+                    }
+                    const downPercentPrice = await this.possibleRepository.findOne({
+                        where: {
+                            price: MoreThanOrEqual(newPriceNumber / (1 - this.limintLoss)),
+                            updatedDate: LessThan(new Date()),
+                            ticker,
+                        },
+                        order: {
+                            updatedDate: "ASC",
+                        }
+                    })
+                    if (downPercentPrice) {
+                        downPercentPrice.downPercentTimes = downPercentPrice.downPercentTimes + 1;
+                        await this.possibleRepository.save(downPercentPrice);
+                    }
+                    let newPricePossible = await this.possibleRepository.findOne({
+                        where: {
+                            price: newPriceNumber,
+                            ticker,
+                        }
+                    })
+                    if (!newPricePossible) {
+                        newPricePossible = this.possibleRepository.create({
+                            price: newPriceNumber,
+                            ticker,
+                            showTimes: 1,
+                        });
+                    } else {
+                        newPricePossible.showTimes += 1;
+                    }
+                    await this.possibleRepository.save(newPricePossible);
+                    await putKey(`current_${ticker}_price`, newPriceNumber.toString());
+                    console.log({
+                        up: upPercentPrice,
+                        down: downPercentPrice,
+                    });
+                    io.emit('lastestPrice', newPricePossible);
+                    const startKey = `is_${ticker}_order_start`;
+                    const isStarted = await getKey(startKey);
+                    if (isStarted !== '0') {
+                        io.emit('isAutoTraderStart', true);
+                        const startMoney = Number.parseFloat(isStarted);
+                        this.startOrder('BTCUSDT',startMoney, io, newPricePossible);
+                    }
+                } catch (error) {
+                    console.error(error);
+                    
                 }
-            })
-            if (upPercentPrice) {
-                upPercentPrice.upPercentTimes = upPercentPrice.upPercentTimes + 1;
-                await this.possibleRepository.save(upPercentPrice);
             }
-            const downPercentPrice = await this.possibleRepository.findOne({
-                where: {
-                    price: MoreThanOrEqual(newPriceNumber / (1 - this.limintLoss)),
-                    updatedDate: LessThan(new Date()),
-                    ticker,
-                },
-                order: {
-                    updatedDate: "ASC",
-                }
-            })
-            if (downPercentPrice) {
-                downPercentPrice.downPercentTimes = downPercentPrice.downPercentTimes + 1;
-                await this.possibleRepository.save(downPercentPrice);
-            }
-            let newPricePossible = await this.possibleRepository.findOne({
-                where: {
-                    price: newPriceNumber,
-                    ticker,
-                }
-            })
-            if (!newPricePossible) {
-                newPricePossible = this.possibleRepository.create({
-                    price: newPriceNumber,
-                    ticker,
-                    showTimes: 1,
-                });
-            } else {
-                newPricePossible.showTimes += 1;
-            }
-            await this.possibleRepository.save(newPricePossible);
-            await putKey(`current_${ticker}_price`, newPriceNumber.toString());
-            console.log({
-                up: upPercentPrice,
-                down: downPercentPrice,
-            });
-            io.emit('lastestPrice', newPricePossible);
-            
-        } catch (e) {
-            console.error(e);
-        }
-
+        });
     }
 
     calculateWinPossibility = async (ticker: string, price: CoinPricePossible, io) => {
@@ -125,23 +130,6 @@ export default class BinanceService {
             return true;
         }
         return null;
-    }
-
-    startGetPrices = async (ticker: string, io:Socket) => {
-        //todo 改造成能够订阅流的方式
-        const startKey = `is_${ticker}_start`;
-        const isStarted = await getKey(startKey);
-        if (isStarted === '0' || !isStarted) {
-            await putKey(startKey, '1')
-        }
-        let timer: NodeJS.Timer;
-        timer = setInterval(async () => {
-            const isStarted = await getKey(startKey);
-            if (isStarted === '0') {
-                return clearInterval(timer);
-            }
-            await this.getCurrentPrice(ticker, io);
-        }, 1500)
     }
 
     sellOutAll = async (ticker: string, price: CoinPricePossible, io:Socket) => {
@@ -189,68 +177,48 @@ export default class BinanceService {
         await putKey(usedMoneyKey, '0');
     }
 
-    startOrder = async (ticker: string, usedMoney: number, io:Socket) => {
+    startOrder = async (ticker: string, usedMoney: number, io:Socket, price: CoinPricePossible) => {
         await putKey(`all_money_position_${ticker}`, usedMoney.toString());
         //記錄投資過的錢的總數
         const usedMoneyKey: string = `${ticker}_used_money`;
         //獲取當前價格
-        const currentPriceKey: string = `current_${ticker}_price`; 
-        const startKey = `is_${ticker}_order_start`;
-        const isStarted = await getKey(startKey);
-        if (isStarted === '0' || !isStarted) {
-            await putKey(startKey, '1')
+        io.emit('isAutoTraderStart', true);
+        const moneyToPut = usedMoney*this.position;
+        //倉位
+        if(!price){
+            console.error("price lost, check the getPrices Method");
+            return false;
         }
-        let timer: NodeJS.Timer;
-        timer = setInterval(async () => {
-            const isStarted = await getKey(startKey);
-            if (isStarted === '0') {
-                io.emit('isAutoTraderStart', false);
-                return clearInterval(timer);
-            }
-            io.emit('isAutoTraderStart', true);
-            const moneyToPut = usedMoney*this.position;
-            //倉位
-            const currentPrice = await getKey(currentPriceKey);
-            if(!currentPrice){
-                console.error("price lost, check the getPrices Method");
-                return false;
-            }
-            const price = await this.possibleRepository.findOne({price: Number.parseFloat(currentPrice)});
-            if(!price){
-                console.error("price lost, check the getPrices Method");
-                return false;
-            }
-            const canBuy = await  this.canBuy(ticker, price, io);
-            if(canBuy){
-                console.log('可以購買，開始下單');
-                io.emit('canBuy', true);
-                const order = this.orderRepository.create({
-                    price: price.price,
-                    cost: moneyToPut,
-                    quantity: moneyToPut/price.price,
-                    limitLoss: price.price*(1-this.limintLoss),
-                    limitWin: price.price*(1+this.limitWin),
-                    ticker
-                });
-                await this.orderRepository.save(order);
-                const allMoneyPut = await getKey(usedMoneyKey);
-                if(!allMoneyPut){
-                    putKey(usedMoneyKey, moneyToPut.toString());
-                }else{
-                    let allMoney = Number.parseFloat(allMoneyPut)
-                    allMoney+=moneyToPut;
-                    putKey(usedMoneyKey, allMoney.toString());
-                }
-                const positionStr = await getKey(`all_money_position_${ticker}`);
-                const newPosition = Number.parseFloat(positionStr) - Number.parseFloat(moneyToPut.toString());
-                console.log("當前倉位", newPosition);
-                await putKey(`all_money_position_${ticker}`, newPosition.toString());
+        const canBuy = await  this.canBuy(ticker, price, io);
+        if(canBuy){
+            console.log('可以購買，開始下單');
+            io.emit('canBuy', true);
+            const order = this.orderRepository.create({
+                price: price.price,
+                cost: moneyToPut,
+                quantity: moneyToPut/price.price,
+                limitLoss: price.price*(1-this.limintLoss),
+                limitWin: price.price*(1+this.limitWin),
+                ticker
+            });
+            await this.orderRepository.save(order);
+            const allMoneyPut = await getKey(usedMoneyKey);
+            if(!allMoneyPut){
+                putKey(usedMoneyKey, moneyToPut.toString());
             }else{
-                io.emit('canBuy', false);
+                let allMoney = Number.parseFloat(allMoneyPut)
+                allMoney+=moneyToPut;
+                putKey(usedMoneyKey, allMoney.toString());
             }
-            await this.sellOutAll(ticker, price, io);
+            const positionStr = await getKey(`all_money_position_${ticker}`);
+            const newPosition = Number.parseFloat(positionStr) - Number.parseFloat(moneyToPut.toString());
+            console.log("當前倉位", newPosition);
+            await putKey(`all_money_position_${ticker}`, newPosition.toString());
+        }else{
+            io.emit('canBuy', false);
+        }
+        await this.sellOutAll(ticker, price, io);
 
-        }, 1500)
     }
 
 }
