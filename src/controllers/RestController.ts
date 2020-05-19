@@ -83,7 +83,7 @@ export default class RestController{
     async create(ctx: koa.Context){
         try {
             const { resource } = ctx.params;
-            let  createParams  = ctx.request.body; 
+            let  createParams  = (ctx.request as any).body; 
             const restService = new RestService(resource, ctx.DBConnection);
             const data =  await restService.create(createParams)
             ctx.rest({
@@ -122,7 +122,7 @@ export default class RestController{
         try {
             const { resource, id } = ctx.params;
             const restService = new RestService(resource, ctx.DBConnection);
-            const data = await restService.update(id, ctx.request.body);
+            const data = await restService.update(id, (ctx.request as any).body);
             ctx.rest({
                 data,
             })
