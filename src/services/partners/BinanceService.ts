@@ -31,7 +31,7 @@ export default class BinanceService {
 
     getCurrentPrice = async (ticker: string, io:Socket) => {
         try {
-            const prices = await this.binance.prices();
+            const prices = await this.binance.prices(ticker);
             let newPriceNumber = Number.parseFloat(prices[ticker]);
             newPriceNumber = Number.parseFloat(newPriceNumber.toFixed(2));
             //反向统计避免重复计算； 找出小于当前价格10%的价格；找出大于当前价格5%的价格，并且更新

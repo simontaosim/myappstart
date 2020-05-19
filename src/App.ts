@@ -71,6 +71,10 @@ export default class App {
         this.server.use(this.router.routes()).use(this.router.allowedMethods());
         const server = http.createServer(this.server.callback());
         this.io = require('socket.io')(server);
+        this.server.use(async (ctx: koa.Context, next: koa.Next) => {
+            ctx.io = this.io;
+            await next();
+        })
         const binanceService = new BinanceService(connection);
         await binanceService.startGetPrices("BTCUSDT", this.io);
         //seed;
