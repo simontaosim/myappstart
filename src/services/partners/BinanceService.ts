@@ -84,7 +84,7 @@ export default class BinanceService {
                         await this.possibleRepository.save(newPricePossible);
                     }
                     
-                
+                    io.emit('latestPrice', newPricePossible);
                     if (CoinOrderInstance.isStarted) {
                         io.emit('isAutoTraderStart', true);
                         await this.startOrder('BTCUSDT', io, newPricePossible);
