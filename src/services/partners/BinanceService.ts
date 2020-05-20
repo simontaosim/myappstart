@@ -87,8 +87,18 @@ export default class BinanceService {
                 
                     if (CoinOrderInstance.isStarted) {
                         io.emit('isAutoTraderStart', true);
-                        const startMoney = CoinOrderInstance.usedMoney;
-                        this.startOrder('BTCUSDT',startMoney, io, newPricePossible);
+                        await this.startOrder('BTCUSDT', io, newPricePossible);
+                        const lossOrders = await  this.orderRepository.find({
+                            limitLoss: LessThanOrEqual(newPricePossible.price),
+                            ticker,
+                            isBack: false,
+                        })
+                        const winOrders = await this.orderRepository.find({
+                            limitWin: MoreThanOrEqual(newPricePossible.price),
+                            ticker,
+                            isBack: false,
+                        });
+                        console.log({lossOrders, winOrders});
                     }
                     oldPrice = newPriceNumber;
                 } catch (error) {
@@ -192,11 +202,11 @@ export default class BinanceService {
         await putKey(usedMoneyKey, '0');
     }
 
-    startOrder = async (ticker: string, usedMoney: number, io:Socket, price: CoinPricePossible) => {
+    startOrder = async (ticker: string,  io:Socket, price: CoinPricePossible) => {
         
         //獲取當前價格
         io.emit('isAutoTraderStart', true);
-        const moneyToPut = usedMoney*this.position;
+        const moneyToPut = CoinOrderInstance.usedMoney*this.position;
         //倉位
         if(!price){
             console.error("price lost, check the getPrices Method");
@@ -206,16 +216,19 @@ export default class BinanceService {
         if(canBuy){
             console.log('可以購買，開始下單');
             io.emit('canBuy', true);
-            const order = this.orderRepository.create({
-                price: price.price,
-                cost: moneyToPut,
-                quantity: moneyToPut/price.price,
-                limitLoss: price.price*(1-this.limintLoss),
-                limitWin: price.price*(1+this.limitWin),
-                ticker
-            });
-            await this.orderRepository.save(order);
-            console.log("下的单", order);
+            if(moneyToPut > 10 && CoinOrderInstance.isBack){
+                const order = this.orderRepository.create({
+                    price: price.price,
+                    cost: moneyToPut,
+                    quantity: moneyToPut/price.price,
+                    limitLoss: price.price*(1-this.limintLoss),
+                    limitWin: price.price*(1+this.limitWin),
+                    ticker
+                });
+                await this.orderRepository.save(order);
+                console.log("下的单", order);
+                CoinOrderInstance.isBack = false;
+            }
         
         }else{
             io.emit('canBuy', false);
