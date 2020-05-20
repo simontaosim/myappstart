@@ -13,8 +13,8 @@ export default class BinanceService {
     private orderRepository: Repository<CoinOrder>
 
     //凯利公式定值
-    private position = 0.1;
-    private winPossibility = 1.01 / 3;
+    private position = 0.511;
+    private winPossibility = 1.00511 / 3;
     private limitWin = 0.01;
     private limintLoss = 0.005;
     constructor(connection: Connection, io:Socket) {
@@ -63,6 +63,8 @@ export default class BinanceService {
                         downPercentPrice.downPercentTimes = downPercentPrice.downPercentTimes + 1;
                         await this.possibleRepository.save(downPercentPrice);
                     }
+                    io.emit('fromUp', upPercentPrice);
+                    io.emit('fromDown', downPercentPrice);
                     let newPricePossible = await this.possibleRepository.findOne({
                         where: {
                             price: newPriceNumber,
@@ -113,8 +115,7 @@ export default class BinanceService {
         });
     }
 
-    calculateWinPossibility = async (ticker: string, price: CoinPricePossible, io) => {
-        io.emit('currentPrice', price)
+    calculateWinPossibility = async (ticker: string, price: CoinPricePossible, io:Socket) => {
         const allPossible = price.upPercentTimes + price.downPercentTimes;
       
         const currentPrice = price.price;

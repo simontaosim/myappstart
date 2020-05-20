@@ -1,25 +1,15 @@
 import * as koa from 'koa';
-import {  httpPost, httpGet } from "../decorators/HttpRoutes";
-import BinanceService from '../services/partners/BinanceService';
+import {   httpGet } from "../decorators/HttpRoutes";
+import { getKey, putKey } from '../services/utils/cache';
 
 export default class BinanceController {
 
-    @httpGet('/price/bid')
-    async bid(ctx: koa.Context){
-        const Binance = require('node-binance-api');
-        const binance = new Binance().options({
-            APIKEY: 'lR7PKoiFSubZqjdtokWDexSYA2JrPhvToZfUGlxLYpSWjfBwxNSfxFFOtzYuDT7E',
-            APISECRET: 'A1fqkdb9hNTlt1Q1rjD1Bs4SaRZlinJvQId4UhV9ggoWwbsjqs2Sh1Y97Fx5WyIt'
-        });
-        binance.websockets.bookTickers( 'BTCUSDT', (error:any, ticker:any)=>{
-            console.log(error);
-            console.log(ticker);
-        });
-        ctx.body = 'just test';
-    }
+ 
     @httpGet("/trade/start")
     async start(ctx: koa.Context){
         try {
+            const startKey = `is_BTCUSDT_order_start`;
+            await putKey(startKey, '100');
             ctx.rest({
                 code: "start:trade:success",
             })
@@ -31,7 +21,8 @@ export default class BinanceController {
     @httpGet("/trade/stop")
     async stop(ctx: koa.Context){
         try {
-
+            const startKey = `is_BTCUSDT_order_start`;
+            await putKey(startKey, '0');
             ctx.rest({
                 code: "stop:trade:success",
             })
