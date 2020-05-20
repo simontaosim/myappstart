@@ -87,6 +87,7 @@ export default class BinanceService {
                     io.emit('lastestPrice', newPricePossible);
                     const startKey = `is_BTCUSDT_order_start`;
                     const isStarted = await getKey(startKey);
+                    console.log({isStarted});
                     if (isStarted !== '0' && isStarted) {
                         io.emit('isAutoTraderStart', true);
                         const startMoney = Number.parseFloat(isStarted);
