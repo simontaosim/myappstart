@@ -13,19 +13,19 @@ export class CoinOrder {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({type: 'numeric', nullable: false})
+    @Column({type: 'decimal', nullable: false})
     price: number;
 
-    @Column({type: 'numeric', nullable: true})
+    @Column({type: 'decimal', nullable: true})
     cost: number;
 
-    @Column({type: 'numeric', nullable: false})
+    @Column({type: 'decimal', nullable: false})
     limitWin: number;
 
-    @Column({type: 'numeric', nullable: false})
+    @Column({type: 'decimal', nullable: false})
     limitLoss: number;
 
-    @Column({type: 'numeric', nullable: false})
+    @Column({type: 'decimal', nullable: false})
     quantity: number
 
     @Column()
@@ -37,7 +37,7 @@ export class CoinOrder {
     @Column({default: false})
     isSuccess: boolean;
 
-    @Column({nullable: true, type: 'numeric'})
+    @Column({nullable: true, type: 'decimal'})
     profit: number
 
 

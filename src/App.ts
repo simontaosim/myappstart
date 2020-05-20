@@ -23,6 +23,7 @@ import { Socket } from 'socket.io';
 import * as http from 'http';
 import UserService from './services/daos/UserService';
 import RoleService from './services/daos/RoleService';
+import BinanceService from './services/partners/BinanceService';
 
 @registerController(
     [
@@ -70,6 +71,11 @@ export default class App {
         this.server.use(this.router.routes()).use(this.router.allowedMethods());
         const server = http.createServer(this.server.callback());
         this.io = require('socket.io')(server);
+        this.server.use(async (ctx: koa.Context, next: koa.Next) => {
+            ctx.io = this.io;
+            await next();
+        })
+        new BinanceService(connection, this.io);
         //seed;
         const roleService = new RoleService(connection);
         await roleService.findOrCreateNobody();
