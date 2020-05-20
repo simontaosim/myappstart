@@ -82,10 +82,6 @@ export default class BinanceService {
                     }
                     
                     await putKey(`current_${ticker}_price`, newPriceNumber.toString());
-                    console.log({
-                        up: upPercentPrice,
-                        down: downPercentPrice,
-                    });
                     io.emit('lastestPrice', newPricePossible);
                     const startKey = `is_${ticker}_order_start`;
                     const isStarted = await getKey(startKey);
