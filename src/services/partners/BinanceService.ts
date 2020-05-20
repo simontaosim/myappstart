@@ -83,9 +83,9 @@ export default class BinanceService {
                         await this.possibleRepository.save(newPricePossible);
                     }
                     
-                    await putKey(`current_${ticker}_price`, newPriceNumber.toString());
+                    await putKey(`is_BTCUSDT_order_start`, newPriceNumber.toString());
                     io.emit('lastestPrice', newPricePossible);
-                    const startKey = `is_${ticker}_order_start`;
+                    const startKey = `is_BTCUSDT_order_start`;
                     const isStarted = await getKey(startKey);
                     if (isStarted !== '0' && isStarted) {
                         io.emit('isAutoTraderStart', true);
