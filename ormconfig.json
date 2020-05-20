@@ -39,7 +39,7 @@
       "password": "123666",
       "database": "appstart_test",
       "synchronize": true,
-      "logging": false,
+      "logging": true,
       "entities": [
          "src/entity/**/*.ts"
       ],
@@ -64,7 +64,7 @@
       "password": "123666",
       "database": "appstart_pro",
       "synchronize": true,
-      "logging": true,
+      "logging": false,
       "entities": [
          "build/entity/**/*{.ts,.js}"
       ],
