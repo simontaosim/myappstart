@@ -1,6 +1,6 @@
 import * as koa from 'koa';
 import {   httpGet } from "../decorators/HttpRoutes";
-import { getKey, putKey } from '../services/utils/cache';
+import CoinOrderInstance from '../services/utils/CoinOrderInstance';
 
 export default class BinanceController {
 
@@ -8,8 +8,7 @@ export default class BinanceController {
     @httpGet("/trade/start")
     async start(ctx: koa.Context){
         try {
-            const startKey = `is_BTCUSDT_order_start`;
-            await putKey(startKey, '100');
+          CoinOrderInstance.isStarted = true;
             ctx.rest({
                 code: "start:trade:success",
             })
@@ -21,8 +20,7 @@ export default class BinanceController {
     @httpGet("/trade/stop")
     async stop(ctx: koa.Context){
         try {
-            const startKey = `is_BTCUSDT_order_start`;
-            await putKey(startKey, '0');
+            CoinOrderInstance.isStarted = false;
             ctx.rest({
                 code: "stop:trade:success",
             })

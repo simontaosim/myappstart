@@ -3,6 +3,7 @@ import { getKey, putKey } from "../utils/cache";
 import { CoinPricePossible } from "../../entity/CoinPricePossible";
 import { CoinOrder } from "../../entity/CoinOrder";
 import { Socket } from "socket.io";
+import CoinOrderInstance from "../utils/CoinOrderInstance";
 
 const Binance = require('node-binance-api');
 
@@ -85,12 +86,10 @@ export default class BinanceService {
                     
                     await putKey(`is_BTCUSDT_order_start`, newPriceNumber.toString());
                     io.emit('lastestPrice', newPricePossible);
-                    const startKey = `is_BTCUSDT_order_start`;
-                    const isStarted = await getKey(startKey);
-                    console.log({isStarted});
-                    if (isStarted !== '0' && isStarted) {
+                
+                    if (CoinOrderInstance.isStarted) {
                         io.emit('isAutoTraderStart', true);
-                        const startMoney = Number.parseFloat(isStarted);
+                        const startMoney = CoinOrderInstance.usedMoney;
                         this.startOrder('BTCUSDT',startMoney, io, newPricePossible);
                     }
                     oldPrice = newPriceNumber;
