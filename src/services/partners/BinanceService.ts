@@ -84,8 +84,6 @@ export default class BinanceService {
                         await this.possibleRepository.save(newPricePossible);
                     }
                     
-                    await putKey(`is_BTCUSDT_order_start`, newPriceNumber.toString());
-                    io.emit('lastestPrice', newPricePossible);
                 
                     if (CoinOrderInstance.isStarted) {
                         io.emit('isAutoTraderStart', true);
@@ -195,9 +193,7 @@ export default class BinanceService {
     }
 
     startOrder = async (ticker: string, usedMoney: number, io:Socket, price: CoinPricePossible) => {
-        await putKey(`all_money_position_${ticker}`, usedMoney.toString());
-        //記錄投資過的錢的總數
-        const usedMoneyKey: string = `${ticker}_used_money`;
+        
         //獲取當前價格
         io.emit('isAutoTraderStart', true);
         const moneyToPut = usedMoney*this.position;
@@ -219,22 +215,11 @@ export default class BinanceService {
                 ticker
             });
             await this.orderRepository.save(order);
-            const allMoneyPut = await getKey(usedMoneyKey);
-            if(!allMoneyPut){
-                putKey(usedMoneyKey, moneyToPut.toString());
-            }else{
-                let allMoney = Number.parseFloat(allMoneyPut)
-                allMoney+=moneyToPut;
-                putKey(usedMoneyKey, allMoney.toString());
-            }
-            const positionStr = await getKey(`all_money_position_${ticker}`);
-            const newPosition = Number.parseFloat(positionStr) - Number.parseFloat(moneyToPut.toString());
-            console.log("當前倉位", newPosition);
-            await putKey(`all_money_position_${ticker}`, newPosition.toString());
+            console.log("下的单", order);
+        
         }else{
             io.emit('canBuy', false);
         }
-        await this.sellOutAll(ticker, price, io);
 
     }
 
