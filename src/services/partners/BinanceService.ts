@@ -41,6 +41,7 @@ export default class BinanceService {
         let timer:NodeJS.Timer;
         timer = setInterval(async ()=>{
             if(currentPrice){
+              
                 let newPrice = await this.possibleRepository.findOne({where: {
                     ticker: "BTCUSDT",
                     price: currentPrice,
@@ -53,6 +54,7 @@ export default class BinanceService {
                 }
                 newPrice.showTimes += 1;
                 await this.possibleRepository.save(newPrice);
+                console.log(newPrice);
                 io.emit("latest", newPrice);
             }
         },500)
