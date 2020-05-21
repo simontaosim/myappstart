@@ -31,7 +31,6 @@ export default class BinanceService {
         });
         this.binance.websockets.bookTickers('BTCUSDT', async (ticker:any, error:any)=>{
             if(!error){
-                console.log(ticker);
                this.currentPrice = Number.parseFloat(ticker.bestBid);
             }
         });
@@ -39,8 +38,12 @@ export default class BinanceService {
 
      storePirces = async  (io:Socket) => {
         const currentPrice = this.currentPrice;
+        console.log(currentPrice);
+
         let timer:NodeJS.Timer;
         timer = setInterval(async ()=>{
+        console.log(currentPrice);
+
             if(currentPrice){
               
                 let newPrice = await this.possibleRepository.findOne({where: {
