@@ -150,8 +150,9 @@ export default class BinanceService {
                 for (let i = 0; i < OrderPositions.length; i++) {
                     const orderPosition = OrderPositions[i];
                     if(!orderPosition.isStarted){
-                        orderPosition.money = AutoStart.allMoney*0.33333;
+                        orderPosition.money = AutoStart.allMoney*this.position;
                         AutoStart.allMoney -= orderPosition.money;
+                        console.log({allMoney: AutoStart.allMoney});
                         orderPosition.isStarted = true;
                     }
                     console.log(i, orderPosition);
