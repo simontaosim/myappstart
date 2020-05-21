@@ -145,6 +145,7 @@ export default class BinanceService {
                    return false;
                 }
             }
+            console.log({allMoney: AutoStart.allMoney});
             if(AutoStart.isStarted && this.currentPrice){
                 let wholeMoney = 0;
                 for (let i = 0; i < OrderPositions.length; i++) {
