@@ -149,12 +149,12 @@ export default class BinanceService {
             if (AutoStart.isStarted && this.newPrice) {
                 //需要知道的信息，考察价格，决策，结果
 
-                const orderPosition = OrderPositions[orderTurn];
+                let orderPosition = OrderPositions[orderTurn];
                 if(!OrderPositions){
                     if(AutoStart.allMoney * this.position<=10.1){
                         return orderTurn = 0;
                     }
-                    OrderPositions.push(  {
+                    orderPosition =  {
                         money: AutoStart.allMoney * this.position,
                         isBack: true,
                         isStarted: false,
@@ -162,8 +162,11 @@ export default class BinanceService {
                         limitWin: 0,
                         price: 0,
                         quantity: 0,
-                    })
+                    };
+                    OrderPositions.push(orderPosition );
+                    AutoStart.allMoney  -= AutoStart.allMoney * this.position;
                 }
+                console.log(orderTurn, orderPosition);
                 orderTurn++;
                 if (orderTurn >= OrderPositions.length) {
                     orderTurn = 0;
