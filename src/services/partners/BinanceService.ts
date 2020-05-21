@@ -144,20 +144,31 @@ export default class BinanceService {
             }
             console.log({ allMoney: AutoStart.allMoney });
             io.emit('allMoney', AutoStart.allMoney);
-            let wholeMoney = 0;
             let outMoney = 0;
             let inComeMoney = 0;
             if (AutoStart.isStarted && this.newPrice) {
                 //需要知道的信息，考察价格，决策，结果
 
                 const orderPosition = OrderPositions[orderTurn];
+                if(!OrderPositions){
+                    if(AutoStart.allMoney * this.position<=10.1){
+                        return orderTurn = 0;
+                    }
+                    OrderPositions.push(  {
+                        money: AutoStart.allMoney * this.position,
+                        isBack: true,
+                        isStarted: false,
+                        limitLoss: 0,
+                        limitWin: 0,
+                        price: 0,
+                        quantity: 0,
+                    })
+                }
                 orderTurn++;
-                if (orderTurn >= 3) {
+                if (orderTurn >= OrderPositions.length) {
                     orderTurn = 0;
                 }
                 if (!orderPosition.isStarted) {
-                    orderPosition.money = AutoStart.allMoney * this.position;
-                    AutoStart.allMoney -= orderPosition.money;
                     console.log({ allMoney: AutoStart.allMoney });
                     orderPosition.isStarted = true;
                 }
@@ -213,9 +224,7 @@ export default class BinanceService {
                     }
                     io.emit('inComeMoney', inComeMoney);
                 }
-                wholeMoney += orderPosition.money;
 
-                io.emit('wholeMoney', wholeMoney);
                 io.emit('profit', inComeMoney - outMoney);
                 //获得总盈利
 
