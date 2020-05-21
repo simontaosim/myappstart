@@ -140,6 +140,7 @@ export default class BinanceService {
                     price: this.currentPrice,
                     ticker: 'BTCUSDT'
                 }})
+                console.log(price);
                 if(price){
                     canBuy = await this.canBuy('BTCUSDT', price, io );
                 }else{
@@ -159,18 +160,22 @@ export default class BinanceService {
                     if(orderPosition.isBack){
                         //当前价格是否可以下单;
                         if(canBuy){
+                            console.log('可以下单');
                             orderPosition.price = this.currentPrice;
                             orderPosition.quantity = orderPosition.money*this.position/this.currentPrice;
                             orderPosition.limitLoss = this.currentPrice*(1 - this.limitLoss);
                             orderPosition.limitWin = this.currentPrice*(1+ this.limitWin);
                             orderPosition.money = orderPosition.money*(1-this.position);
                             orderPosition.isBack = false;
+                        }else{
+                            console.log("不能下单");
                         }
 
                     }else{
                         //如果当前款项没有回来；
                         if(orderPosition.limitLoss >= this.currentPrice){
                             //止损
+                            console.log('正在止损');
                             const backMoney = orderPosition.quantity * this.currentPrice;
                             orderPosition.money += backMoney;
                             const distance  = orderPosition.quantity * (this.currentPrice - orderPosition.price);
@@ -178,6 +183,8 @@ export default class BinanceService {
                         }
                         if(orderPosition.limitWin <= this.currentPrice){
                             //止盈
+                            console.log('正在止盈');
+
                             const backMoney = orderPosition.quantity * this.currentPrice;
                             orderPosition.money += backMoney;
                             const distance  = orderPosition.quantity * (this.currentPrice - orderPosition.price);
@@ -186,8 +193,8 @@ export default class BinanceService {
                       
                     }
                     wholeMoney += orderPosition.money;
-                    
                 }
+
                 console.log({wholeMoney});
                 io.emit('wholeMoney', wholeMoney);
 
