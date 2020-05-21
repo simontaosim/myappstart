@@ -150,7 +150,7 @@ export default class BinanceService {
                 //需要知道的信息，考察价格，决策，结果
 
                 let orderPosition = OrderPositions[orderTurn];
-                if(!OrderPositions){
+                if(!orderPosition){
                     if(AutoStart.allMoney * this.position<=10.1){
                         return orderTurn = 0;
                     }
