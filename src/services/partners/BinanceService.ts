@@ -151,7 +151,7 @@ export default class BinanceService {
 
                 let orderPosition = OrderPositions[orderTurn];
                 if(!orderPosition){
-                    if(AutoStart.allMoney * this.position<=10.1){
+                    if((AutoStart.allMoney * this.position)<=10.1){
                         return orderTurn = 0;
                     }
                     orderPosition =  {
@@ -176,7 +176,7 @@ export default class BinanceService {
                 console.log(orderTurn, orderPosition);
 
                 orderTurn++;
-                if (orderTurn >= OrderPositions.length) {
+                if (orderTurn > OrderPositions.length) {
                     orderTurn = 0;
                 }
 
