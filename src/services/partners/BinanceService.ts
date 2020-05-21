@@ -155,7 +155,7 @@ export default class BinanceService {
                         return orderTurn = 0;
                     }
                     orderPosition =  {
-                        money: AutoStart.allMoney * this.position,
+                        money: 0,
                         isBack: true,
                         isStarted: false,
                         limitLoss: 0,
@@ -164,7 +164,7 @@ export default class BinanceService {
                         quantity: 0,
                     };
                     OrderPositions.push(orderPosition );
-                    AutoStart.allMoney  -= AutoStart.allMoney * this.position;
+                    
                 }
                 console.log(orderTurn, orderPosition);
                 orderTurn++;
@@ -173,6 +173,8 @@ export default class BinanceService {
                 }
                 if (!orderPosition.isStarted) {
                     console.log({ allMoney: AutoStart.allMoney });
+                    orderPosition.money = AutoStart.allMoney * this.position;
+                    AutoStart.allMoney  -= AutoStart.allMoney * this.position;
                     orderPosition.isStarted = true;
                 }
                 if (orderPosition.isBack) {
@@ -242,6 +244,7 @@ export default class BinanceService {
                         orderPosition.money += backMoney;
                         inComeMoney += backMoney;
                         orderPosition.isStarted = false;
+                        orderPosition.money= 0;
                         AutoStart.allMoney += orderPosition.money;
                         orderPosition.isBack = true;
                     }
