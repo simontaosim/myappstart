@@ -52,9 +52,12 @@ export default class BinanceService {
                     newPrice = this.possibleRepository.create({
                         ticker: "BTCUSDT",
                         price: this.currentPrice,
+                        showTimes: 1
                     })
+                }else{
+                    newPrice.showTimes += 1;
                 }
-                newPrice.showTimes += 1;
+              
                 await this.possibleRepository.save(newPrice);
                 console.log(newPrice);
                 io.emit("latest", newPrice);
