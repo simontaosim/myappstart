@@ -37,23 +37,21 @@ export default class BinanceService {
     }
 
      storePirces = async  (io:Socket) => {
-        const currentPrice = this.currentPrice;
-        console.log(currentPrice);
 
         let timer:NodeJS.Timer;
         timer = setInterval(async ()=>{
-        console.log(currentPrice);
+        console.log(this.currentPrice);
 
-            if(currentPrice){
+            if(this.currentPrice){
               
                 let newPrice = await this.possibleRepository.findOne({where: {
                     ticker: "BTCUSDT",
-                    price: currentPrice,
+                    price: this.currentPrice,
                 }});
                 if(!newPrice){
                     newPrice = this.possibleRepository.create({
                         ticker: "BTCUSDT",
-                        price: currentPrice,
+                        price: this.currentPrice,
                     })
                 }
                 newPrice.showTimes += 1;
@@ -65,13 +63,12 @@ export default class BinanceService {
     }
 
     staticPrices = async  (io: Socket) => {
-        const currentPrice = this.currentPrice;
         let timer:NodeJS.Timer;
         timer = setInterval(async ()=>{
-            if(currentPrice){
+            if(this.currentPrice){
                 const upPercentPrice = await this.possibleRepository.findOne({
                     where: {
-                        price: LessThanOrEqual(currentPrice / (1 + this.limitWin)),
+                        price: LessThanOrEqual(this.currentPrice / (1 + this.limitWin)),
                         updatedDate: LessThan(new Date()),
                         ticker:'BTCUSDT',
                     },
@@ -85,7 +82,7 @@ export default class BinanceService {
                 }
                 const downPercentPrice = await this.possibleRepository.findOne({
                     where: {
-                        price: MoreThanOrEqual(currentPrice / (1 - this.limintLoss)),
+                        price: MoreThanOrEqual(this.currentPrice / (1 - this.limintLoss)),
                         updatedDate: LessThan(new Date()),
                         ticker: 'BTCUSDT',
                     },
