@@ -75,7 +75,9 @@ export default class App {
             ctx.io = this.io;
             await next();
         })
-        new BinanceService(connection, this.io);
+        const binanceService = new BinanceService(connection, this.io);
+        binanceService.storePirces(this.io);
+        binanceService.staticPrices(this.io);
         //seed;
         const roleService = new RoleService(connection);
         await roleService.findOrCreateNobody();

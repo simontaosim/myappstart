@@ -12,6 +12,7 @@ export default class BinanceService {
     public possible: number;
     private possibleRepository: Repository<CoinPricePossible>
     private orderRepository: Repository<CoinOrder>
+    private currentPrice:number = 0;
 
     //凯利公式定值
     private position = 0.511;
@@ -28,99 +29,72 @@ export default class BinanceService {
             APIKEY: 'lR7PKoiFSubZqjdtokWDexSYA2JrPhvToZfUGlxLYpSWjfBwxNSfxFFOtzYuDT7E',
             APISECRET: 'A1fqkdb9hNTlt1Q1rjD1Bs4SaRZlinJvQId4UhV9ggoWwbsjqs2Sh1Y97Fx5WyIt'
         });
-        let oldPrice = 0;
         this.binance.websockets.bookTickers('BTCUSDT', async (ticker:any, error:any)=>{
             if(!error){
-                let newPriceNumber = Number.parseFloat(ticker.bestBid);
-                if(newPriceNumber === oldPrice){
-                    return false;
-                }
-                try {
-                    const upPercentPrice = await this.possibleRepository.findOne({
-                        where: {
-                            price: LessThanOrEqual(newPriceNumber / (1 + this.limitWin)),
-                            updatedDate: LessThan(new Date()),
-                            ticker:'BTCUSDT',
-                        },
-                        order: {
-                            updatedDate: "ASC",
-                        }
-                    })
-                    if (upPercentPrice) {
-                        upPercentPrice.upPercentTimes = upPercentPrice.upPercentTimes + 1;
-                        await this.possibleRepository.save(upPercentPrice);
-                    }
-                    const downPercentPrice = await this.possibleRepository.findOne({
-                        where: {
-                            price: MoreThanOrEqual(newPriceNumber / (1 - this.limintLoss)),
-                            updatedDate: LessThan(new Date()),
-                            ticker: 'BTCUSDT',
-                        },
-                        order: {
-                            updatedDate: "ASC",
-                        }
-                    })
-                    if (downPercentPrice) {
-                        downPercentPrice.downPercentTimes = downPercentPrice.downPercentTimes + 1;
-                        await this.possibleRepository.save(downPercentPrice);
-                    }
-                    io.emit('fromUp', upPercentPrice);
-                    io.emit('fromDown', downPercentPrice);
-                    let newPricePossible = await this.possibleRepository.findOne({
-                        where: {
-                            price: newPriceNumber,
-                            ticker: 'BTCUSDT',
-                        }
-                    })
-                    if (!newPricePossible) {
-                        newPricePossible = this.possibleRepository.create({
-                            price: newPriceNumber,
-                            ticker: 'BTCUSDT',
-                            showTimes: 1,
-                        });
-                        await this.possibleRepository.save(newPricePossible);
-                    } else {
-                        newPricePossible.showTimes += 1;
-                        await this.possibleRepository.save(newPricePossible);
-                    }
-                    
-                    io.emit('latestPrice', newPricePossible);
-                    if (CoinOrderInstance.isStarted) {
-                        io.emit('isAutoTraderStart', true);
-                        await this.startOrder('BTCUSDT', io, newPricePossible);
-                        const lossOrders = await  this.orderRepository.find({
-                            limitLoss: LessThanOrEqual(newPricePossible.price),
-                            ticker,
-                            isBack: false,
-                        })
-                        const winOrders = await this.orderRepository.find({
-                            limitWin: MoreThanOrEqual(newPricePossible.price),
-                            ticker,
-                            isBack: false,
-                        });
-                        console.log({lossOrders, winOrders});
-                    }
-                    oldPrice = newPriceNumber;
-                } catch (error) {
-                    if(error.detail.includes("already exists")){
-                        console.log('补上没有写入的');
-                        
-                        const missingPrice = await this.possibleRepository.findOne({
-                            where: {
-                                price: newPriceNumber,
-                                ticker: 'BTCUSDT',
-                            }
-                        })
-                        if(missingPrice){
-                            missingPrice.showTimes += 1;
-                            await this.possibleRepository.save(missingPrice)
-                        }
-                        
-                    }
-                    
-                }
+               this.currentPrice = Number.parseFloat(ticker.bestBid);
             }
         });
+    }
+
+    storePirces =  (io:Socket) => {
+        const currentPrice = this.currentPrice;
+        let timer:NodeJS.Timer;
+        timer = setInterval(async ()=>{
+            if(currentPrice){
+                let newPrice = await this.possibleRepository.findOne({where: {
+                    ticker: "BTCUSDT",
+                    price: currentPrice,
+                }});
+                if(!newPrice){
+                    newPrice = this.possibleRepository.create({
+                        ticker: "BTCUSDT",
+                        price: currentPrice,
+                    })
+                }
+                newPrice.showTimes += 1;
+                await this.possibleRepository.save(newPrice);
+                io.emit("latest", newPrice);
+            }
+        },500)
+    }
+
+    staticPrices =  (io: Socket) => {
+        const currentPrice = this.currentPrice;
+        let timer:NodeJS.Timer;
+        timer = setInterval(async ()=>{
+            if(currentPrice){
+                const upPercentPrice = await this.possibleRepository.findOne({
+                    where: {
+                        price: LessThanOrEqual(currentPrice / (1 + this.limitWin)),
+                        updatedDate: LessThan(new Date()),
+                        ticker:'BTCUSDT',
+                    },
+                    order: {
+                        updatedDate: "ASC",
+                    }
+                })
+                if (upPercentPrice) {
+                    upPercentPrice.upPercentTimes = upPercentPrice.upPercentTimes + 1;
+                    await this.possibleRepository.save(upPercentPrice);
+                }
+                const downPercentPrice = await this.possibleRepository.findOne({
+                    where: {
+                        price: MoreThanOrEqual(currentPrice / (1 - this.limintLoss)),
+                        updatedDate: LessThan(new Date()),
+                        ticker: 'BTCUSDT',
+                    },
+                    order: {
+                        updatedDate: "ASC",
+                    }
+                })
+                if (downPercentPrice) {
+                    downPercentPrice.downPercentTimes = downPercentPrice.downPercentTimes + 1;
+                    await this.possibleRepository.save(downPercentPrice);
+                }
+                io.emit('fromUp', upPercentPrice);
+                io.emit('fromDown', downPercentPrice);
+            }
+        },500)
     }
 
     calculateWinPossibility = async (ticker: string, price: CoinPricePossible, io:Socket) => {
@@ -155,51 +129,6 @@ export default class BinanceService {
             return true;
         }
         return null;
-    }
-
-    sellOutAll = async (ticker: string, price: CoinPricePossible, io:Socket) => {
-        const updateOrder = async  (orders: CoinOrder[]) => {
-            for (let index = 0; index < orders.length; index++) {
-                const order = orders[index];
-                const profit = order.quantity*order.price - order.cost;
-                order.isBack = true;
-                order.profit = profit;
-                await this.orderRepository.save(order);
-                //處理倉位
-                const backMoney =order.cost + profit;
-                const moneyPositionStr = await getKey(`all_money_position_${ticker}`);
-                let moneyPosition = Number.parseFloat(moneyPositionStr);
-                moneyPosition = moneyPosition + backMoney;
-                console.log("此單獲益",profit.toString());
-                console.log("當前倉位", moneyPosition);
-                await putKey(`all_money_position_${ticker}`, moneyPosition.toString());
-
-            }
-        }
-        let orders = await  this.orderRepository.find({
-            limitLoss: LessThanOrEqual(price.price),
-            ticker,
-            isBack: false,
-        })
-        await updateOrder(orders);
-     
-        orders = await this.orderRepository.find({
-            limitWin: MoreThanOrEqual(price.price),
-            ticker,
-            isBack: false,
-        })
-        await updateOrder(orders);
-
-
-    }
-
-    stopOrder  = async (ticker: string ) => {
-        const startKey = `is_${ticker}_order_start`;
-        const usedMoneyKey: string = `${ticker}_used_money`;
-        //獲取當前價格
-        await putKey(startKey, '0');
-        await putKey(`all_money_position_${ticker}`, '0');
-        await putKey(usedMoneyKey, '0');
     }
 
     startOrder = async (ticker: string,  io:Socket, price: CoinPricePossible) => {
