@@ -166,10 +166,7 @@ export default class BinanceService {
                     OrderPositions.push(orderPosition );
                     
                 }
-                orderTurn++;
-                if (orderTurn >= OrderPositions.length) {
-                    orderTurn = 0;
-                }
+              
                 if (!orderPosition.isStarted) {
                     console.log({ allMoney: AutoStart.allMoney });
                     orderPosition.money = AutoStart.allMoney * this.position;
@@ -177,6 +174,11 @@ export default class BinanceService {
                     orderPosition.isStarted = true;
                 }
                 console.log(orderTurn, orderPosition);
+
+                orderTurn++;
+                if (orderTurn >= OrderPositions.length) {
+                    orderTurn = 0;
+                }
 
                 if (orderPosition.isBack) {
                     //当前价格是否可以下单;
