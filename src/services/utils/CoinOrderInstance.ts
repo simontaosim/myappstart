@@ -14,35 +14,4 @@ export const AutoStart = {
 
 
 
-export const OrderPositions: Position[] = [
-    {
-        money: 0,
-        isBack: true,
-        isStarted: false,
-        limitLoss: 0,
-        limitWin: 0,
-        price: 0,
-        quantity: 0,
-    },
-    {
-        money: 0,
-        isBack: true,
-        isStarted: false,
-        limitLoss: 0,
-        limitWin: 0,
-        price: 0,
-        quantity: 0,
-
-    },
-    {
-        money: 0,
-        isBack: true,
-        isStarted: false,
-        limitLoss: 0,
-        limitWin: 0,
-        price: 0,
-        quantity: 0,
-
-
-    }
-]
+export const OrderPositions: Position[] = []
