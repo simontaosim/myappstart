@@ -10,14 +10,14 @@ export default class BinanceService {
     private binance: any;
     public possible: number;
     private possibleRepository: Repository<CoinPricePossible>
-    private currentPrice:number = 0;
-
+    private currentPrice: number = 0;
+    private newPrice: CoinPricePossible;
     //凯利公式定值
     private position = 0.511;
     private winPossibility = 1.00511 / 3;
     private limitWin = 0.01;
     private limitLoss = 0.005;
-    constructor(connection: Connection, io:Socket) {
+    constructor(connection: Connection, io: Socket) {
         const possibleRepository = connection.getRepository(CoinPricePossible);
         this.possibleRepository = possibleRepository;
 
@@ -25,49 +25,52 @@ export default class BinanceService {
             APIKEY: 'lR7PKoiFSubZqjdtokWDexSYA2JrPhvToZfUGlxLYpSWjfBwxNSfxFFOtzYuDT7E',
             APISECRET: 'A1fqkdb9hNTlt1Q1rjD1Bs4SaRZlinJvQId4UhV9ggoWwbsjqs2Sh1Y97Fx5WyIt'
         });
-        this.binance.websockets.bookTickers('BTCUSDT', async (ticker:any, error:any)=>{
-            if(!error){
-               this.currentPrice = Number.parseFloat(ticker.bestBid);
+        this.binance.websockets.bookTickers('BTCUSDT', async (ticker: any, error: any) => {
+            if (!error) {
+                this.currentPrice = Number.parseFloat(ticker.bestBid);
             }
         });
     }
 
-     storePirces =   (io:Socket) => {
+    storePirces = (io: Socket) => {
 
-        let timer:NodeJS.Timer;
-        timer = setInterval(async ()=>{
+        let timer: NodeJS.Timer;
+        timer = setInterval(async () => {
 
-            if(this.currentPrice){
-              
-                let newPrice = await this.possibleRepository.findOne({where: {
-                    ticker: "BTCUSDT",
-                    price: this.currentPrice,
-                }});
-                if(!newPrice){
+            if (this.currentPrice) {
+
+                let newPrice = await this.possibleRepository.findOne({
+                    where: {
+                        ticker: "BTCUSDT",
+                        price: this.currentPrice,
+                    }
+                });
+                if (!newPrice) {
                     newPrice = this.possibleRepository.create({
                         ticker: "BTCUSDT",
                         price: this.currentPrice,
                         showTimes: 1
                     })
-                }else{
+                } else {
                     newPrice.showTimes += 1;
                 }
-              
+
                 await this.possibleRepository.save(newPrice);
+                this.newPrice = newPrice;
                 io.emit("latest", newPrice);
             }
-        },500)
+        }, 500)
     }
 
-    staticPrices =   (io: Socket) => {
-        let timer:NodeJS.Timer;
-        timer = setInterval(async ()=>{
-            if(this.currentPrice){
+    staticPrices = (io: Socket) => {
+        let timer: NodeJS.Timer;
+        timer = setInterval(async () => {
+            if (this.currentPrice) {
                 const upPercentPrice = await this.possibleRepository.findOne({
                     where: {
                         price: LessThanOrEqual(this.currentPrice / (1 + this.limitWin)),
                         updatedDate: LessThan(new Date()),
-                        ticker:'BTCUSDT',
+                        ticker: 'BTCUSDT',
                     },
                     order: {
                         updatedDate: "ASC",
@@ -94,12 +97,12 @@ export default class BinanceService {
                 io.emit('fromUp', upPercentPrice);
                 io.emit('fromDown', downPercentPrice);
             }
-        },500)
+        }, 500)
     }
 
-    calculateWinPossibility = async (ticker: string, price: CoinPricePossible, io:Socket) => {
+    calculateWinPossibility = async (ticker: string, price: CoinPricePossible, io: Socket) => {
         const allPossible = price.upPercentTimes + price.downPercentTimes;
-      
+
         const currentPrice = price.price;
         const allShow = await this.possibleRepository.createQueryBuilder('coin_price_possible')
             .where("ticker=:ticker", { ticker })
@@ -121,7 +124,7 @@ export default class BinanceService {
 
     }
 
-    canBuy = async (ticker: string, price: CoinPricePossible, io:Socket) => {
+    canBuy = async (ticker: string, price: CoinPricePossible, io: Socket) => {
         this.possible = await this.calculateWinPossibility(ticker, price, io);
         console.log("最終概率", this.possible);
         io.emit('currentPossible', this.possible);
@@ -131,101 +134,104 @@ export default class BinanceService {
         return null;
     }
 
-    listenAutoTrade = async (io:Socket) => {
-        let timer:NodeJS.Timer;
+    listenAutoTrade = async (io: Socket) => {
+        let timer: NodeJS.Timer;
+        let orderTurn = 0;
         timer = setInterval(async () => {
             let canBuy = false;
-            let price = null;
-            if(this.currentPrice){
-                price = await this.possibleRepository.findOne({where: {
-                    price: this.currentPrice,
-                    ticker: 'BTCUSDT'
-                }})
-                if(!price){
-                   return false;
-                }
+            if (!this.newPrice) {
+                return false;
             }
-            console.log({allMoney: AutoStart.allMoney});
-            if(AutoStart.isStarted && this.currentPrice){
-                let wholeMoney = 0;
-                for (let i = 0; i < OrderPositions.length; i++) {
-                    const orderPosition = OrderPositions[i];
-                    if(!orderPosition.isStarted){
-                        orderPosition.money = AutoStart.allMoney*this.position;
-                        AutoStart.allMoney -= orderPosition.money;
-                        console.log({allMoney: AutoStart.allMoney});
-                        orderPosition.isStarted = true;
-                    }
-                    console.log(i, orderPosition);
-                    if(orderPosition.isBack){
-                        //当前价格是否可以下单;
-                        console.log('当前价格是否可以下单', i);
-                        if(price){
-                            canBuy = await this.canBuy('BTCUSDT', price, io );
-                        }else{
-                            continue;
-                        }
-                        if(canBuy){
-                            console.log('可以下单:', i);
-                            orderPosition.price = this.currentPrice;
-                            orderPosition.quantity = orderPosition.money*this.position/this.currentPrice;
-                            orderPosition.limitLoss = this.currentPrice*(1 - this.limitLoss);
-                            orderPosition.limitWin = this.currentPrice*(1+ this.limitWin);
-                            orderPosition.money = orderPosition.money*(1-this.position);
-                            orderPosition.isBack = false;
-                        }else{
-                            console.log("不能下单");
-                        }
+            console.log({ allMoney: AutoStart.allMoney });
+            io.emit('allMoney', AutoStart.allMoney);
+            let wholeMoney = 0;
+            let outMoney = 0;
+            let inComeMoney = 0;
+            if (AutoStart.isStarted && this.newPrice) {
+                //需要知道的信息，考察价格，决策，结果
 
-                    }else{
-                        //如果当前款项没有回来；
-                        if(orderPosition.limitLoss >= this.currentPrice){
-                            //止损
-                            console.log('正在止损');
-                            const backMoney = orderPosition.quantity * this.currentPrice;
-                            orderPosition.money += backMoney;
-                            const distance  = orderPosition.quantity * (this.currentPrice - orderPosition.price);
-                            io.emit('distance', distance);
-                        }
-                        if(orderPosition.limitWin <= this.currentPrice){
-                            //止盈
-                            console.log('正在止盈');
-
-                            const backMoney = orderPosition.quantity * this.currentPrice;
-                            orderPosition.money += backMoney;
-                            const distance  = orderPosition.quantity * (this.currentPrice - orderPosition.price);
-                            io.emit('distance', distance);
-                        }
-                      
-                    }
-                    wholeMoney += orderPosition.money;
+                const orderPosition = OrderPositions[orderTurn];
+                orderTurn++;
+                if (orderTurn >= 3) {
+                    orderTurn = 0;
                 }
+                if (!orderPosition.isStarted) {
+                    orderPosition.money = AutoStart.allMoney * this.position;
+                    AutoStart.allMoney -= orderPosition.money;
+                    console.log({ allMoney: AutoStart.allMoney });
+                    orderPosition.isStarted = true;
+                }
+                if (orderPosition.isBack) {
+                    //当前价格是否可以下单;
+                    const orderPrice = this.newPrice.price;
+                    io.emit('decidePrice', orderPrice);
+                    console.log('当前价格是否可以下单', orderTurn);
+                    if (this.newPrice) {
+                        canBuy = await this.canBuy('BTCUSDT', this.newPrice, io);
+                    } else {
+                        return false;
+                    }
+                    if (canBuy) {
+                        console.log('可以下单:', orderTurn);
+                        io.emit("canBuy", true);
+                        orderPosition.price = orderPrice;
+                        orderPosition.quantity = orderPosition.money * this.position / orderPrice;
+                        orderPosition.limitLoss = orderPrice * (1 - this.limitLoss);
+                        orderPosition.limitWin = orderPrice * (1 + this.limitWin);
+                        orderPosition.money = orderPosition.money * (1 - this.position);
+                        orderPosition.isBack = false;
+                        outMoney += orderPosition.money * this.position;
+                    } else {
+                        io.emit("canBuy", false);
+                        console.log("不能下单");
+                    }
+                    io.emit('outMoney', outMoney);
 
-                console.log({wholeMoney});
+                } else {
+                    //如果当前款项没有回来；
+                    const orderPrice = this.newPrice.price;
+
+                    if (orderPosition.limitLoss >= orderPrice) {
+                        //止损
+                        console.log('正在止损');
+                        const backMoney = orderPosition.quantity * orderPrice;
+                        orderPosition.money += backMoney;
+                        inComeMoney += backMoney;
+                        const distance = orderPosition.quantity * (orderPrice - orderPosition.price);
+                        io.emit('distance', distance);
+                    }
+                    if (orderPosition.limitWin <= orderPrice) {
+                        //止盈
+                        console.log('正在止盈');
+
+                        const backMoney = orderPosition.quantity * orderPrice;
+                        orderPosition.money += backMoney;
+                        inComeMoney += backMoney;
+
+                        const distance = orderPosition.quantity * (orderPrice - orderPosition.price);
+                        io.emit('distance', distance);
+                    }
+                    io.emit('inComeMoney', inComeMoney);
+                }
+                wholeMoney += orderPosition.money;
+
                 io.emit('wholeMoney', wholeMoney);
+                io.emit('profit', inComeMoney - outMoney);
+                //获得总盈利
 
-            }else{
+            } else {
                 for (let j = 0; j < OrderPositions.length; j++) {
                     const orderPosition = OrderPositions[j];
-                    if(orderPosition.isBack){
+                    if (orderPosition.isBack) {
                         orderPosition.isStarted = false;
-                    }else{
-                        console.log("等待回款");
-                         //如果当前款项没有回来；
-                         if(orderPosition.limitLoss >= this.currentPrice){
-                            //止损
-                            const backMoney = orderPosition.quantity * this.currentPrice;
-                            orderPosition.money += backMoney;
-                            const distance  = orderPosition.quantity * (this.currentPrice - orderPosition.price);
-                            io.emit('distance', distance);
-                        }
-                        if(orderPosition.limitWin <= this.currentPrice){
-                            //止盈
-                            const backMoney = orderPosition.quantity * this.currentPrice;
-                            orderPosition.money += backMoney;
-                            const distance  = orderPosition.quantity * (this.currentPrice - orderPosition.price);
-                            io.emit('distance', distance);
-                        }
+                    } else {
+                        console.log("强制平仓");
+                        const backMoney = orderPosition.quantity * this.currentPrice;
+                        orderPosition.money += backMoney;
+                        inComeMoney += backMoney;
+                        orderPosition.isStarted = false;
+                        AutoStart.allMoney += orderPosition.money;
+                        orderPosition.isBack = true;
                     }
                 }
             }
