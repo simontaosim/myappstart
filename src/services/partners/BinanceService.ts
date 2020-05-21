@@ -140,7 +140,11 @@ export default class BinanceService {
                     price: this.currentPrice,
                     ticker: 'BTCUSDT'
                 }})
-                canBuy = await this.canBuy('BTCUSDT', price, io );
+                if(price){
+                    canBuy = await this.canBuy('BTCUSDT', price, io );
+                }else{
+                    return false;
+                }
             }
             if(AutoStart.isStarted && this.currentPrice){
                 let wholeMoney = 0;
