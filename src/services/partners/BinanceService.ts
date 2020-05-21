@@ -36,7 +36,7 @@ export default class BinanceService {
         });
     }
 
-    storePirces =  (io:Socket) => {
+     storePirces = async  (io:Socket) => {
         const currentPrice = this.currentPrice;
         let timer:NodeJS.Timer;
         timer = setInterval(async ()=>{
@@ -60,7 +60,7 @@ export default class BinanceService {
         },500)
     }
 
-    staticPrices =  (io: Socket) => {
+    staticPrices = async  (io: Socket) => {
         const currentPrice = this.currentPrice;
         let timer:NodeJS.Timer;
         timer = setInterval(async ()=>{
