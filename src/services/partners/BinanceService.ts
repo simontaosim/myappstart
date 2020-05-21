@@ -154,7 +154,7 @@ export default class BinanceService {
                         AutoStart.allMoney -= orderPosition.money;
                         orderPosition.isStarted = true;
                     }
-                    
+                    console.log(i, orderPosition);
                     if(orderPosition.isBack){
                         //当前价格是否可以下单;
                         console.log('当前价格是否可以下单', i);
