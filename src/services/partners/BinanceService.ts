@@ -135,16 +135,14 @@ export default class BinanceService {
         let timer:NodeJS.Timer;
         timer = setInterval(async () => {
             let canBuy = false;
+            let price = null;
             if(this.currentPrice){
-                const price = await this.possibleRepository.findOne({where: {
+                price = await this.possibleRepository.findOne({where: {
                     price: this.currentPrice,
                     ticker: 'BTCUSDT'
                 }})
-                console.log(price);
-                if(price){
-                    canBuy = await this.canBuy('BTCUSDT', price, io );
-                }else{
-                    return false;
+                if(!price){
+                   return false;
                 }
             }
             if(AutoStart.isStarted && this.currentPrice){
@@ -152,15 +150,21 @@ export default class BinanceService {
                 for (let i = 0; i < OrderPositions.length; i++) {
                     const orderPosition = OrderPositions[i];
                     if(!orderPosition.isStarted){
-                        orderPosition.money = AutoStart.allMoney/3;
+                        orderPosition.money = AutoStart.allMoney*0.33333;
                         AutoStart.allMoney -= orderPosition.money;
                         orderPosition.isStarted = true;
                     }
                     
                     if(orderPosition.isBack){
                         //当前价格是否可以下单;
+                        console.log('当前价格是否可以下单', i);
+                        if(price){
+                            canBuy = await this.canBuy('BTCUSDT', price, io );
+                        }else{
+                            continue;
+                        }
                         if(canBuy){
-                            console.log('可以下单');
+                            console.log('可以下单:', i);
                             orderPosition.price = this.currentPrice;
                             orderPosition.quantity = orderPosition.money*this.position/this.currentPrice;
                             orderPosition.limitLoss = this.currentPrice*(1 - this.limitLoss);
@@ -223,7 +227,7 @@ export default class BinanceService {
                     }
                 }
             }
-        }, 1000)
+        }, 500)
     }
 
 }
