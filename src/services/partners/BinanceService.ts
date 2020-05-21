@@ -1,9 +1,8 @@
 import { Repository, LessThanOrEqual, LessThan, MoreThanOrEqual, Connection } from "typeorm";
-import { getKey, putKey } from "../utils/cache";
 import { CoinPricePossible } from "../../entity/CoinPricePossible";
 import { CoinOrder } from "../../entity/CoinOrder";
 import { Socket } from "socket.io";
-import CoinOrderInstance from "../utils/CoinOrderInstance";
+import { AutoStart, OrderPositions } from "../utils/CoinOrderInstance";
 
 const Binance = require('node-binance-api');
 
@@ -11,19 +10,16 @@ export default class BinanceService {
     private binance: any;
     public possible: number;
     private possibleRepository: Repository<CoinPricePossible>
-    private orderRepository: Repository<CoinOrder>
     private currentPrice:number = 0;
 
     //凯利公式定值
     private position = 0.511;
     private winPossibility = 1.00511 / 3;
     private limitWin = 0.01;
-    private limintLoss = 0.005;
+    private limitLoss = 0.005;
     constructor(connection: Connection, io:Socket) {
         const possibleRepository = connection.getRepository(CoinPricePossible);
-        const orderRepository = connection.getRepository(CoinOrder);
         this.possibleRepository = possibleRepository;
-        this.orderRepository = orderRepository;
 
         this.binance = new Binance().options({
             APIKEY: 'lR7PKoiFSubZqjdtokWDexSYA2JrPhvToZfUGlxLYpSWjfBwxNSfxFFOtzYuDT7E',
@@ -36,11 +32,10 @@ export default class BinanceService {
         });
     }
 
-     storePirces = async  (io:Socket) => {
+     storePirces =   (io:Socket) => {
 
         let timer:NodeJS.Timer;
         timer = setInterval(async ()=>{
-        console.log(this.currentPrice);
 
             if(this.currentPrice){
               
@@ -59,13 +54,12 @@ export default class BinanceService {
                 }
               
                 await this.possibleRepository.save(newPrice);
-                console.log(newPrice);
                 io.emit("latest", newPrice);
             }
         },500)
     }
 
-    staticPrices = async  (io: Socket) => {
+    staticPrices =   (io: Socket) => {
         let timer:NodeJS.Timer;
         timer = setInterval(async ()=>{
             if(this.currentPrice){
@@ -85,7 +79,7 @@ export default class BinanceService {
                 }
                 const downPercentPrice = await this.possibleRepository.findOne({
                     where: {
-                        price: MoreThanOrEqual(this.currentPrice / (1 - this.limintLoss)),
+                        price: MoreThanOrEqual(this.currentPrice / (1 - this.limitLoss)),
                         updatedDate: LessThan(new Date()),
                         ticker: 'BTCUSDT',
                     },
@@ -137,38 +131,88 @@ export default class BinanceService {
         return null;
     }
 
-    startOrder = async (ticker: string,  io:Socket, price: CoinPricePossible) => {
-        
-        //獲取當前價格
-        io.emit('isAutoTraderStart', true);
-        const moneyToPut = CoinOrderInstance.usedMoney*this.position;
-        //倉位
-        if(!price){
-            console.error("price lost, check the getPrices Method");
-            return false;
-        }
-        const canBuy = await  this.canBuy(ticker, price, io);
-        if(canBuy){
-            console.log('可以購買，開始下單');
-            io.emit('canBuy', true);
-            if(moneyToPut > 10 && CoinOrderInstance.isBack){
-                const order = this.orderRepository.create({
-                    price: price.price,
-                    cost: moneyToPut,
-                    quantity: moneyToPut/price.price,
-                    limitLoss: price.price*(1-this.limintLoss),
-                    limitWin: price.price*(1+this.limitWin),
-                    ticker
-                });
-                await this.orderRepository.save(order);
-                console.log("下的单", order);
-                CoinOrderInstance.isBack = false;
+    listenAutoTrade = async (io:Socket) => {
+        let timer:NodeJS.Timer;
+        timer = setInterval(async () => {
+            let canBuy = false;
+            if(this.currentPrice){
+                const price = await this.possibleRepository.findOne({where: {
+                    price: this.currentPrice,
+                    ticker: 'BTCUSDT'
+                }})
+                canBuy = await this.canBuy('BTCUSDT', price, io );
             }
-        
-        }else{
-            io.emit('canBuy', false);
-        }
+            if(AutoStart.isStarted && this.currentPrice){
+                let wholeMoney = 0;
+                for (let i = 0; i < OrderPositions.length; i++) {
+                    const orderPosition = OrderPositions[i];
+                    if(!orderPosition.isStarted){
+                        orderPosition.money = AutoStart.allMoney/3;
+                        AutoStart.allMoney -= orderPosition.money;
+                        orderPosition.isStarted = true;
+                    }
+                    
+                    if(orderPosition.isBack){
+                        //当前价格是否可以下单;
+                        if(canBuy){
+                            orderPosition.price = this.currentPrice;
+                            orderPosition.quantity = orderPosition.money*this.position/this.currentPrice;
+                            orderPosition.limitLoss = this.currentPrice*(1 - this.limitLoss);
+                            orderPosition.limitWin = this.currentPrice*(1+ this.limitWin);
+                            orderPosition.money = orderPosition.money*(1-this.position);
+                            orderPosition.isBack = false;
+                        }
 
+                    }else{
+                        //如果当前款项没有回来；
+                        if(orderPosition.limitLoss >= this.currentPrice){
+                            //止损
+                            const backMoney = orderPosition.quantity * this.currentPrice;
+                            orderPosition.money += backMoney;
+                            const distance  = orderPosition.quantity * (this.currentPrice - orderPosition.price);
+                            io.emit('distance', distance);
+                        }
+                        if(orderPosition.limitWin <= this.currentPrice){
+                            //止盈
+                            const backMoney = orderPosition.quantity * this.currentPrice;
+                            orderPosition.money += backMoney;
+                            const distance  = orderPosition.quantity * (this.currentPrice - orderPosition.price);
+                            io.emit('distance', distance);
+                        }
+                      
+                    }
+                    wholeMoney += orderPosition.money;
+                    
+                }
+                console.log({wholeMoney});
+                io.emit('wholeMoney', wholeMoney);
+
+            }else{
+                for (let j = 0; j < OrderPositions.length; j++) {
+                    const orderPosition = OrderPositions[j];
+                    if(orderPosition.isBack){
+                        orderPosition.isStarted = false;
+                    }else{
+                        console.log("等待回款");
+                         //如果当前款项没有回来；
+                         if(orderPosition.limitLoss >= this.currentPrice){
+                            //止损
+                            const backMoney = orderPosition.quantity * this.currentPrice;
+                            orderPosition.money += backMoney;
+                            const distance  = orderPosition.quantity * (this.currentPrice - orderPosition.price);
+                            io.emit('distance', distance);
+                        }
+                        if(orderPosition.limitWin <= this.currentPrice){
+                            //止盈
+                            const backMoney = orderPosition.quantity * this.currentPrice;
+                            orderPosition.money += backMoney;
+                            const distance  = orderPosition.quantity * (this.currentPrice - orderPosition.price);
+                            io.emit('distance', distance);
+                        }
+                    }
+                }
+            }
+        }, 1000)
     }
 
 }

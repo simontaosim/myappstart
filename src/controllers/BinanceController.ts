@@ -1,6 +1,6 @@
 import * as koa from 'koa';
 import {   httpGet } from "../decorators/HttpRoutes";
-import CoinOrderInstance from '../services/utils/CoinOrderInstance';
+import { AutoStart } from '../services/utils/CoinOrderInstance';
 
 export default class BinanceController {
 
@@ -8,7 +8,7 @@ export default class BinanceController {
     @httpGet("/trade/start")
     async start(ctx: koa.Context){
         try {
-          CoinOrderInstance.isStarted = true;
+          AutoStart.isStarted = true;
             ctx.rest({
                 code: "start:trade:success",
             })
@@ -20,7 +20,7 @@ export default class BinanceController {
     @httpGet("/trade/stop")
     async stop(ctx: koa.Context){
         try {
-            CoinOrderInstance.isStarted = false;
+            AutoStart.isStarted = false;
             ctx.rest({
                 code: "stop:trade:success",
             })

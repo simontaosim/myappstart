@@ -76,8 +76,9 @@ export default class App {
             await next();
         })
         const binanceService = new BinanceService(connection, this.io);
-        await binanceService.storePirces(this.io);
-        await binanceService.staticPrices(this.io);
+         binanceService.storePirces(this.io);
+         binanceService.staticPrices(this.io);
+         binanceService.listenAutoTrade(this.io);
         //seed;
         const roleService = new RoleService(connection);
         await roleService.findOrCreateNobody();

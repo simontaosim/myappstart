@@ -1,5 +1,37 @@
-export default {
+export const AutoStart = {
     isStarted: false,
-    usedMoney: 100,
-    isBack: true,
+    allMoney: 150,
 }
+
+export const OrderPositions = [
+    {
+        money: 0,
+        isBack: true,
+        isStarted: false,
+        limitLoss: 0,
+        limitWin: 0,
+        price: 0,
+        quantity: 0,
+    },
+    {
+        money: 0,
+        isBack: true,
+        isStarted: false,
+        limitLoss: 0,
+        limitWin: 0,
+        price: 0,
+        quantity: 0,
+
+    },
+    {
+        money: 0,
+        isBack: true,
+        isStarted: false,
+        limitLoss: 0,
+        limitWin: 0,
+        price: 0,
+        quantity: 0,
+
+
+    }
+]
