@@ -203,13 +203,19 @@ export default class BinanceService {
                         if (canBuy) {
                             console.log('可以下单:', orderTurn);
                             io.emit("canBuy", true);
-                            orderPosition.price = orderPrice;
-                            orderPosition.quantity = orderPosition.money * this.position / orderPrice;
-                            orderPosition.limitLoss = orderPrice * (1 - this.limitLoss);
-                            orderPosition.limitWin = orderPrice * (1 + this.limitWin);
-                            orderPosition.money = orderPosition.money * (1 - this.position);
-                            orderPosition.isBack = false;
-                            outMoney += orderPosition.money * this.position;
+                            if(orderPosition.money * this.position>10){
+                                orderPosition.price = orderPrice;
+                                orderPosition.quantity = orderPosition.money * this.position / orderPrice;
+                                orderPosition.limitLoss = orderPrice * (1 - this.limitLoss);
+                                orderPosition.limitWin = orderPrice * (1 + this.limitWin);
+                                orderPosition.money = orderPosition.money * (1 - this.position);
+                                orderPosition.isBack = false;
+                                outMoney += orderPosition.money * this.position;
+                            }else{
+                                console.log('最小下单额度不满足');
+                                
+                            }
+                           
                         } else {
                             io.emit("canBuy", false);
                             console.log("不能下单");
@@ -234,6 +240,7 @@ export default class BinanceService {
                         inComeMoney += backMoney;
                         orderPosition.quantity = 0;
                         const distance = orderPosition.quantity * (orderPrice - orderPosition.price);
+                        //此处真实下单要观察订单是否成交
                         io.emit('distance', distance);
                     }
                     if (orderPosition.limitWin <= orderPrice) {
@@ -246,6 +253,7 @@ export default class BinanceService {
                         orderPosition.isBack = true;
                         orderPosition.quantity = 0;
                         const distance = orderPosition.quantity * (orderPrice - orderPosition.price);
+                          //此处真实下单要观察订单是否成交
                         io.emit('distance', distance);
                     }
                     io.emit('inComeMoney', inComeMoney);
