@@ -75,17 +75,23 @@ export default class App {
             ctx.io = this.io;
             await next();
         })
-        const binanceService = new BinanceService(connection, this.io);
-         binanceService.storePirces(this.io);
-         binanceService.staticPrices(this.io);
-         binanceService.listenAutoTrade(this.io);
-        //seed;
-        const roleService = new RoleService(connection);
-        await roleService.findOrCreateNobody();
-        await roleService.findOrCreateAdmin();
-        await roleService.findOrCreateRegister();
-        const userService = new UserService(connection);
-        await userService.findOrCreateAdmin();
+        try {
+            const binanceService = new BinanceService(connection, this.io);
+            binanceService.storePirces(this.io);
+            binanceService.staticPrices(this.io);
+            binanceService.listenAutoTrade(this.io);
+           //seed;
+           const roleService = new RoleService(connection);
+           await roleService.findOrCreateNobody();
+           await roleService.findOrCreateAdmin();
+           await roleService.findOrCreateRegister();
+           const userService = new UserService(connection);
+           await userService.findOrCreateAdmin();
+        } catch (e) {
+            console.log(e);
+            
+        }
+       
         
         server.listen(9987, () => {
             console.log('server start at', 9987);

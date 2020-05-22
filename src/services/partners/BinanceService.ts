@@ -38,26 +38,31 @@ export default class BinanceService {
         timer = setInterval(async () => {
 
             if (this.currentPrice) {
-
-                let newPrice = await this.possibleRepository.findOne({
-                    where: {
-                        ticker: "BTCUSDT",
-                        price: this.currentPrice,
+                try {
+                    let newPrice = await this.possibleRepository.findOne({
+                        where: {
+                            ticker: "BTCUSDT",
+                            price: this.currentPrice,
+                        }
+                    });
+                    if (!newPrice) {
+                        newPrice = this.possibleRepository.create({
+                            ticker: "BTCUSDT",
+                            price: this.currentPrice,
+                            showTimes: 1
+                        })
+                    } else {
+                        newPrice.showTimes += 1;
                     }
-                });
-                if (!newPrice) {
-                    newPrice = this.possibleRepository.create({
-                        ticker: "BTCUSDT",
-                        price: this.currentPrice,
-                        showTimes: 1
-                    })
-                } else {
-                    newPrice.showTimes += 1;
+    
+                    await this.possibleRepository.save(newPrice);
+                    this.newPrice = newPrice;
+                    io.emit("latest", newPrice);
+                } catch (e) {
+                    console.log(e);
+                    
                 }
-
-                await this.possibleRepository.save(newPrice);
-                this.newPrice = newPrice;
-                io.emit("latest", newPrice);
+                
             }
         }, 500)
     }
@@ -66,36 +71,42 @@ export default class BinanceService {
         let timer: NodeJS.Timer;
         timer = setInterval(async () => {
             if (this.currentPrice) {
-                const upPercentPrice = await this.possibleRepository.findOne({
-                    where: {
-                        price: LessThanOrEqual(this.currentPrice / (1 + this.limitWin)),
-                        updatedDate: LessThan(new Date()),
-                        ticker: 'BTCUSDT',
-                    },
-                    order: {
-                        updatedDate: "ASC",
+                try {
+                    const upPercentPrice = await this.possibleRepository.findOne({
+                        where: {
+                            price: LessThanOrEqual(this.currentPrice / (1 + this.limitWin)),
+                            updatedDate: LessThan(new Date()),
+                            ticker: 'BTCUSDT',
+                        },
+                        order: {
+                            updatedDate: "ASC",
+                        }
+                    })
+                    if (upPercentPrice) {
+                        upPercentPrice.upPercentTimes = upPercentPrice.upPercentTimes + 1;
+                        await this.possibleRepository.save(upPercentPrice);
                     }
-                })
-                if (upPercentPrice) {
-                    upPercentPrice.upPercentTimes = upPercentPrice.upPercentTimes + 1;
-                    await this.possibleRepository.save(upPercentPrice);
-                }
-                const downPercentPrice = await this.possibleRepository.findOne({
-                    where: {
-                        price: MoreThanOrEqual(this.currentPrice / (1 - this.limitLoss)),
-                        updatedDate: LessThan(new Date()),
-                        ticker: 'BTCUSDT',
-                    },
-                    order: {
-                        updatedDate: "ASC",
+                    const downPercentPrice = await this.possibleRepository.findOne({
+                        where: {
+                            price: MoreThanOrEqual(this.currentPrice / (1 - this.limitLoss)),
+                            updatedDate: LessThan(new Date()),
+                            ticker: 'BTCUSDT',
+                        },
+                        order: {
+                            updatedDate: "ASC",
+                        }
+                    })
+                    if (downPercentPrice) {
+                        downPercentPrice.downPercentTimes = downPercentPrice.downPercentTimes + 1;
+                        await this.possibleRepository.save(downPercentPrice);
                     }
-                })
-                if (downPercentPrice) {
-                    downPercentPrice.downPercentTimes = downPercentPrice.downPercentTimes + 1;
-                    await this.possibleRepository.save(downPercentPrice);
+                    io.emit('fromUp', upPercentPrice);
+                    io.emit('fromDown', downPercentPrice);
+                } catch (e) {
+                    console.log(e);
+                    
                 }
-                io.emit('fromUp', upPercentPrice);
-                io.emit('fromDown', downPercentPrice);
+               
             }
         }, 500)
     }
@@ -179,30 +190,35 @@ export default class BinanceService {
                 }
 
                 if (orderPosition.isBack) {
+                    try {
+                        const orderPrice = this.newPrice.price;
+                        io.emit('decidePrice', orderPrice);
+                        console.log('当前价格是否可以下单', orderTurn);
+                        if (this.newPrice) {
+                            canBuy = await this.canBuy('BTCUSDT', this.newPrice, io);
+                        } else {
+                            return false;
+                        }
+                        if (canBuy) {
+                            console.log('可以下单:', orderTurn);
+                            io.emit("canBuy", true);
+                            orderPosition.price = orderPrice;
+                            orderPosition.quantity = orderPosition.money * this.position / orderPrice;
+                            orderPosition.limitLoss = orderPrice * (1 - this.limitLoss);
+                            orderPosition.limitWin = orderPrice * (1 + this.limitWin);
+                            orderPosition.money = orderPosition.money * (1 - this.position);
+                            orderPosition.isBack = false;
+                            outMoney += orderPosition.money * this.position;
+                        } else {
+                            io.emit("canBuy", false);
+                            console.log("不能下单");
+                        }
+                        io.emit('outMoney', outMoney);
+                    } catch (e) {
+                        console.log(e);
+                        
+                    }
                     //当前价格是否可以下单;
-                    const orderPrice = this.newPrice.price;
-                    io.emit('decidePrice', orderPrice);
-                    console.log('当前价格是否可以下单', orderTurn);
-                    if (this.newPrice) {
-                        canBuy = await this.canBuy('BTCUSDT', this.newPrice, io);
-                    } else {
-                        return false;
-                    }
-                    if (canBuy) {
-                        console.log('可以下单:', orderTurn);
-                        io.emit("canBuy", true);
-                        orderPosition.price = orderPrice;
-                        orderPosition.quantity = orderPosition.money * this.position / orderPrice;
-                        orderPosition.limitLoss = orderPrice * (1 - this.limitLoss);
-                        orderPosition.limitWin = orderPrice * (1 + this.limitWin);
-                        orderPosition.money = orderPosition.money * (1 - this.position);
-                        orderPosition.isBack = false;
-                        outMoney += orderPosition.money * this.position;
-                    } else {
-                        io.emit("canBuy", false);
-                        console.log("不能下单");
-                    }
-                    io.emit('outMoney', outMoney);
 
                 } else {
                     //如果当前款项没有回来；
