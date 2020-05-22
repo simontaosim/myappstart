@@ -261,6 +261,7 @@ export default class BinanceService {
                         orderPosition.isStarted = false;
                         if(orderPosition.money!==0){
                             AutoStart.allMoney += orderPosition.money;
+                            orderPosition.money = 0;
                         }
                     } else {
                         console.log("强制平仓");
