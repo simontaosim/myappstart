@@ -1,8 +1,7 @@
 import { Repository, LessThanOrEqual, LessThan, MoreThanOrEqual, Connection } from "typeorm";
 import { CoinPricePossible } from "../../entity/CoinPricePossible";
-import { CoinOrder } from "../../entity/CoinOrder";
 import { Socket } from "socket.io";
-import { AutoStart, OrderPositions } from "../utils/CoinOrderInstance";
+import { AutoStart, Position } from "../utils/CoinOrderInstance";
 
 const Binance = require('node-binance-api');
 
@@ -148,6 +147,7 @@ export default class BinanceService {
     listenAutoTrade = async (io: Socket) => {
         let timer: NodeJS.Timer;
         let orderTurn = 0;
+        let OrderPositions: Position[] = [];
         timer = setInterval(async () => {
             let canBuy = false;
             if (!this.newPrice) {
@@ -273,6 +273,7 @@ export default class BinanceService {
                         AutoStart.allMoney += backMoney;
                         orderPosition.isBack = true;
                     }
+                    OrderPositions = [];
                     console.log("allMoney",  AutoStart.allMoney );
                     
                 }

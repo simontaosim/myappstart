@@ -12,6 +12,3 @@ export const AutoStart = {
     allMoney: 150,
 }
 
-
-
-export const OrderPositions: Position[] = []
