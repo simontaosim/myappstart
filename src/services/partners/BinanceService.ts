@@ -158,7 +158,7 @@ export default class BinanceService {
             let inComeMoney = 0;
             if (AutoStart.isStarted && this.newPrice) {
                 //需要知道的信息，考察价格，决策，结果
-
+                io.emit("isStarted", AutoStart.isStarted);
                 let orderPosition = OrderPositions[orderTurn];
                 if(!orderPosition){
                     if((AutoStart.allMoney * this.position)<=10.1){
@@ -193,7 +193,7 @@ export default class BinanceService {
                     try {
                         const orderPrice = this.newPrice.price;
                         io.emit('decidePrice', orderPrice);
-                        console.log('当前价格是否可以下单', orderTurn);
+                        console.log('当前价格是否可以下单', orderTurn, orderPosition);
                         if (this.newPrice) {
                             canBuy = await this.canBuy('BTCUSDT', this.newPrice, io);
                         } else {
