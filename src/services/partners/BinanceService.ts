@@ -142,7 +142,6 @@ export default class BinanceService {
             if (!this.newPrice) {
                 return false;
             }
-            console.log({ allMoney: AutoStart.allMoney });
             io.emit('allMoney', AutoStart.allMoney);
             let outMoney = 0;
             let inComeMoney = 0;
@@ -173,7 +172,6 @@ export default class BinanceService {
                     AutoStart.allMoney  -= AutoStart.allMoney * this.position;
                     orderPosition.isStarted = true;
                 }
-                console.log(orderTurn, orderPosition);
 
                 orderTurn++;
                 if (orderTurn > OrderPositions.length) {
@@ -215,7 +213,9 @@ export default class BinanceService {
                         console.log('正在止损');
                         const backMoney = orderPosition.quantity * orderPrice;
                         orderPosition.money += backMoney;
+                        orderPosition.isBack = true;
                         inComeMoney += backMoney;
+                        orderPosition.quantity = 0;
                         const distance = orderPosition.quantity * (orderPrice - orderPosition.price);
                         io.emit('distance', distance);
                     }
@@ -226,7 +226,8 @@ export default class BinanceService {
                         const backMoney = orderPosition.quantity * orderPrice;
                         orderPosition.money += backMoney;
                         inComeMoney += backMoney;
-
+                        orderPosition.isBack = true;
+                        orderPosition.quantity = 0;
                         const distance = orderPosition.quantity * (orderPrice - orderPosition.price);
                         io.emit('distance', distance);
                     }
