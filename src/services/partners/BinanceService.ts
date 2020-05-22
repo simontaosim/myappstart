@@ -258,6 +258,7 @@ export default class BinanceService {
                     const orderPosition = OrderPositions[j];
                     if (orderPosition.isBack) {
                         orderPosition.isStarted = false;
+                        AutoStart.allMoney += orderPosition.money;
                     } else {
                         console.log("强制平仓");
                         const backMoney = orderPosition.quantity * this.currentPrice;
