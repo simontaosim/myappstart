@@ -181,6 +181,7 @@ export default class BinanceService {
                     console.log({ allMoney: AutoStart.allMoney });
                     orderPosition.money = AutoStart.allMoney * this.position;
                     AutoStart.allMoney  -= orderPosition.money;
+                    console.log("allMoney",  AutoStart.allMoney );
                     orderPosition.isStarted = true;
                 }
 
@@ -271,6 +272,8 @@ export default class BinanceService {
                         AutoStart.allMoney += backMoney;
                         orderPosition.isBack = true;
                     }
+                    console.log("allMoney",  AutoStart.allMoney );
+                    
                 }
             }
         }, 500)
