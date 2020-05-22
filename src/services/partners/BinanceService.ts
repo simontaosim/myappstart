@@ -128,7 +128,7 @@ export default class BinanceService {
             return (price.upPercentTimes / allPossible + targetShow.sum / allShow.sum) / 2
         }
         // return (targetShow.sum / allShow.sum) 
-        return (targetShow.sum / allShow.sum) / 2
+        return (targetShow.sum / allShow.sum) / 3
 
         //频率比例， 上涨可能性，二者的平均数来确定最终概率.
 
