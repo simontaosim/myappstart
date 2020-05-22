@@ -156,9 +156,9 @@ export default class BinanceService {
             io.emit('allMoney', AutoStart.allMoney);
             let outMoney = 0;
             let inComeMoney = 0;
+            io.emit("isStarted", AutoStart.isStarted);
             if (AutoStart.isStarted && this.newPrice) {
                 //需要知道的信息，考察价格，决策，结果
-                io.emit("isStarted", AutoStart.isStarted);
                 let orderPosition = OrderPositions[orderTurn];
                 if(!orderPosition){
                     if((AutoStart.allMoney * this.position)<=10.1){
