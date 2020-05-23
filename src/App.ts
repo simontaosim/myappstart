@@ -23,6 +23,7 @@ import { Socket } from 'socket.io';
 import * as http from 'http';
 import UserService from './services/daos/UserService';
 import RoleService from './services/daos/RoleService';
+import BinanceService from './services/partners/BinanceService';
 
 @registerController(
     [
@@ -75,7 +76,10 @@ export default class App {
             await next();
         })
         try {
-         
+            const binanceService = new BinanceService(connection, this.io);
+            binanceService.storePirces(this.io);
+            binanceService.staticPrices(this.io);
+            binanceService.listenAutoTrade(this.io);
            //seed;
            const roleService = new RoleService(connection);
            await roleService.findOrCreateNobody();
