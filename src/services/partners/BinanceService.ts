@@ -186,7 +186,7 @@ export default class BinanceService {
                 }
 
                 orderTurn++;
-                if (orderTurn > OrderPositions.length) {
+                if (orderTurn >= OrderPositions.length) {
                     orderTurn = 0;
                 }
 
@@ -240,7 +240,6 @@ export default class BinanceService {
                         inComeMoney += backMoney;
                         orderPosition.quantity = 0;
                         const distance = orderPosition.quantity * (orderPrice - orderPosition.price);
-                        //此处真实下单要观察订单是否成交
                         io.emit('distance', distance);
                     }
                     if (orderPosition.limitWin <= orderPrice) {
