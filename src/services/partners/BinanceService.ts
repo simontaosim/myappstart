@@ -53,15 +53,15 @@ export default class BinanceService {
                     } else {
                         newPrice.showTimes += 1;
                     }
-    
+
                     await this.possibleRepository.save(newPrice);
                     this.newPrice = newPrice;
                     io.emit("latest", newPrice);
                 } catch (e) {
                     console.log(e);
-                    
+
                 }
-                
+
             }
         }, 500)
     }
@@ -103,9 +103,9 @@ export default class BinanceService {
                     io.emit('fromDown', downPercentPrice);
                 } catch (e) {
                     console.log(e);
-                    
+
                 }
-               
+
             }
         }, 500)
     }
@@ -160,11 +160,11 @@ export default class BinanceService {
             if (AutoStart.isStarted && this.newPrice) {
                 //需要知道的信息，考察价格，决策，结果
                 let orderPosition = OrderPositions[orderTurn];
-                if(!orderPosition){
-                    if((AutoStart.allMoney * this.position)<=10.1){
+                if (!orderPosition) {
+                    if ((AutoStart.allMoney * this.position) <= 10.1) {
                         return orderTurn = 0;
                     }
-                    orderPosition =  {
+                    orderPosition = {
                         money: 0,
                         isBack: true,
                         isStarted: false,
@@ -173,15 +173,15 @@ export default class BinanceService {
                         price: 0,
                         quantity: 0,
                     };
-                    OrderPositions.push(orderPosition );
-                    
+                    OrderPositions.push(orderPosition);
+
                 }
-              
+
                 if (!orderPosition.isStarted) {
                     console.log({ allMoney: AutoStart.allMoney });
                     orderPosition.money = AutoStart.allMoney * this.position;
-                    AutoStart.allMoney  -= orderPosition.money;
-                    console.log("allMoney",  AutoStart.allMoney );
+                    AutoStart.allMoney -= orderPosition.money;
+                    console.log("allMoney", AutoStart.allMoney);
                     orderPosition.isStarted = true;
                 }
 
@@ -203,7 +203,7 @@ export default class BinanceService {
                         if (canBuy) {
                             console.log('可以下单:', orderTurn);
                             io.emit("canBuy", true);
-                            if(orderPosition.money * this.position>10){
+                            if (orderPosition.money * this.position > 10) {
                                 orderPosition.price = orderPrice;
                                 orderPosition.quantity = orderPosition.money * this.position / orderPrice;
                                 orderPosition.limitLoss = orderPrice * (1 - this.limitLoss);
@@ -211,11 +211,11 @@ export default class BinanceService {
                                 orderPosition.money = orderPosition.money * (1 - this.position);
                                 orderPosition.isBack = false;
                                 outMoney += orderPosition.money * this.position;
-                            }else{
+                            } else {
                                 console.log('最小下单额度不满足');
-                                
+
                             }
-                           
+
                         } else {
                             io.emit("canBuy", false);
                             console.log("不能下单");
@@ -223,7 +223,7 @@ export default class BinanceService {
                         io.emit('outMoney', outMoney);
                     } catch (e) {
                         console.log(e);
-                        
+
                     }
                     //当前价格是否可以下单;
 
@@ -253,7 +253,7 @@ export default class BinanceService {
                         orderPosition.isBack = true;
                         orderPosition.quantity = 0;
                         const distance = orderPosition.quantity * (orderPrice - orderPosition.price);
-                          //此处真实下单要观察订单是否成交
+                        //此处真实下单要观察订单是否成交
                         io.emit('distance', distance);
                     }
                     io.emit('inComeMoney', inComeMoney);
@@ -267,7 +267,7 @@ export default class BinanceService {
                     const orderPosition = OrderPositions[j];
                     if (orderPosition.isBack) {
                         orderPosition.isStarted = false;
-                        if(orderPosition.money!==0){
+                        if (orderPosition.money !== 0) {
                             AutoStart.allMoney += orderPosition.money;
                             orderPosition.money = 0;
                         }
@@ -277,13 +277,12 @@ export default class BinanceService {
                         orderPosition.money += backMoney;
                         inComeMoney += backMoney;
                         orderPosition.isStarted = false;
-                        orderPosition.money= 0;
+                        orderPosition.money = 0;
                         AutoStart.allMoney += backMoney;
                         orderPosition.isBack = true;
                     }
                 }
                 OrderPositions = [];
-                console.log("allMoney",  AutoStart.allMoney );
             }
         }, 500)
     }
