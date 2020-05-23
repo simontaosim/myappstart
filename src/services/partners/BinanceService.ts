@@ -161,7 +161,7 @@ export default class BinanceService {
                 //需要知道的信息，考察价格，决策，结果
                 let orderPosition = OrderPositions[orderTurn];
                 if(!orderPosition){
-                    if((AutoStart.allMoney * this.position)<=10.1){
+                    if(AutoStart.allMoney * this.position<=10.1){
                         return orderTurn = 0;
                     }
                     orderPosition =  {
@@ -186,7 +186,7 @@ export default class BinanceService {
                 }
 
                 orderTurn++;
-                if (orderTurn > OrderPositions.length) {
+                if (orderTurn >= OrderPositions.length) {
                     orderTurn = 0;
                 }
 
