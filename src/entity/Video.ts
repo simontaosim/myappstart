@@ -5,56 +5,55 @@ import {
     UpdateDateColumn, 
     CreateDateColumn,
     VersionColumn,
-    ManyToMany,
-    JoinTable,
-    OneToMany,
     DeleteDateColumn,
-    Unique,
-    RelationId,
+    ManyToOne,
+    JoinColumn,
 } from "typeorm";
-
-import { Role } from './Role';
-import { Post } from "./Post";
+import { VideoCategory } from "./VideoCategory";
 
 @Entity()
-@Unique(["username"])
- export class User {
-
+ export class Video {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
-    username: string;
+    @Column("simple-json", {nullable: true})
+    cover: {
+        small: string,
+        cover: string,
+        src: string,
+    };
 
     @Column()
-    password: string;
+    title: string;
+
+    @Column()
+    address: string;
+
+    @Column({default: false})
+    isPublished: boolean;
+
+    @Column("text")
+    body: string;
 
     @UpdateDateColumn()
     updatedDate: Date;
     
     @CreateDateColumn()
     createdDate: Date;
-
-    @Column({default: false})
-    isDefault: boolean
     
     @VersionColumn()
     version: number;
 
-    @RelationId((user: User) => user.roles)
-    roleIds: number[]
-
-    @ManyToMany(Type => Role, { onDelete: 'SET NULL' })
-    @JoinTable()
-    roles: Role[];
-
-    @OneToMany(Type => Post, post => post.author, { onDelete: 'SET NULL' })
-    posts: Post[];
-
-    
-
     @DeleteDateColumn()
     deletedDate: Date;
+
+    @ManyToOne(type=> VideoCategory, cate => cate.videos, { onDelete: 'SET NULL' })
+    @JoinColumn({ name: "cateId" })
+    cate: VideoCategory
+
+    @Column("int", { nullable: true })
+    cateId: number;
+    
 
     @Column("simple-json", {nullable: true})
     acl: {
@@ -67,5 +66,6 @@ import { Post } from "./Post";
          users: number[]
         }
      }
+
 }
 

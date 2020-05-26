@@ -7,6 +7,7 @@ import { Role } from '../entity/Role';
 import { Permission } from '../entity/Permission';
 import DefaultResourceService from '../services/daos/DefaultResourceService';
 import { PostTag } from '../entity/PostTag';
+import { Video } from '../entity/Video';
 
 
 export default async function (ctx: koa.Context, next: koa.Next ){
@@ -19,7 +20,8 @@ export default async function (ctx: koa.Context, next: koa.Next ){
             "posts": Post,
             'roles': Role,
             'permissions': Permission,
-            'tags': PostTag
+            'tags': PostTag,
+            'videos': Video
         }
         console.log({
             ACLParams

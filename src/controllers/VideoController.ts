@@ -3,14 +3,12 @@ import * as koa from 'koa';
 import {  httpPost, httpPut } from "../decorators/HttpRoutes";
 import * as striptags from 'striptags';
 import * as removeEmptyLines from 'remove-blank-lines';
-import { Post } from '../entity/Post';
-import { PostTag } from '../entity/PostTag';
-import { In } from 'typeorm';
+import { Video } from '../entity/Video';
 
 function checkPostParams(ctx: koa.Context){
 
     const  params = (ctx.request  as any).body;
-    const { title, body, tagIds, cover } = params;
+    const { title, body, cover } = params;
     if(title==="" || !title || title.trim().length === 0){
      ctx.status = 400;
      ctx.res.statusMessage = "TITLE_REQUIRED";
@@ -31,9 +29,9 @@ function checkPostParams(ctx: koa.Context){
     if(body){
         let text = striptags(body);
         text = removeEmptyLines(text);
-        if(text.trim().length <=50){
+        if(text.trim().length <=10){
          ctx.status = 400;
-         ctx.res.statusMessage = "BODY_REQUIRE_MORE_THAN_50";
+         ctx.res.statusMessage = "BODY_REQUIRE_MORE_THAN_10";
          return  {
             status: 'deny',
             reason: 'BODY_REQUIRE_MORE_THAN_50' 
@@ -46,11 +44,11 @@ function checkPostParams(ctx: koa.Context){
     }
 }
 
-export default class PostController {
-    @httpPost("/posts")
+export default class VideoController {
+    @httpPost("/videos")
     async create(ctx: koa.Context){
        const  createParams = (ctx.request  as any).body;
-       const { title, body, tagIds, cover } = createParams;
+       const { title, body, cover, address, isPublished } = createParams;
        const checkPass = checkPostParams(ctx);
        if(checkPass.status!=='pass'){
            return ctx.rest({
@@ -58,36 +56,29 @@ export default class PostController {
                reason: checkPass.reason
            })
        }
-       const postRepository = ctx.DBConnection.getRepository(Post);
-       const post = postRepository.create({
+       const videoRepository = ctx.DBConnection.getRepository(Video);
+       const video = videoRepository.create({
            title,
            body,
            cover,
+           address,
            authorId: ctx.userId,
+           isPublished: isPublished? isPublished : false,
        })
-       const  tagRepository = ctx.DBConnection.getRepository(PostTag);
-       if(tagIds && tagIds.length>0){
-        const tags = await tagRepository.find({
-            where: {
-                id: In(tagIds),
-            }
-        })
-        post.tags = tags;
-       }
-      
-       await postRepository.save(post);
+       
+       await videoRepository.save(video);
        ctx.rest({
-           data: post,
-            id: post.id,
+           data: video,
+            id: video.id,
        })
        
     }
 
-    @httpPut("/posts/:id")
+    @httpPut("/videos/:id")
     async update(ctx: koa.Context){
         const { id } = ctx.params;
         const  updateParams = (ctx.request  as any).body;
-       const { title, body, tagIds, cover } = updateParams;
+       const { title, body, cover, address, isPublished } = updateParams;
        const checkPass = checkPostParams(ctx);
        if(checkPass.status!=='pass'){
            return ctx.rest({
@@ -95,9 +86,9 @@ export default class PostController {
                reason: checkPass.reason
            })
        }
-       const postRepository = ctx.DBConnection.getRepository(Post);
-       let post = await postRepository.findOne(id);
-       if(!post){
+       const videoRepository = ctx.DBConnection.getRepository(Video);
+       let video = await videoRepository.findOne(id);
+       if(!video){
            ctx.status = 404;
            ctx.res.statusMessage = "POST_NOT_FOUND";
            return ctx.rest({
@@ -105,20 +96,16 @@ export default class PostController {
                reason: 'POST_NOT_FOUND'
            })
        }
-       const  tagRepository = ctx.DBConnection.getRepository(PostTag);
-       const tags = await tagRepository.find({
-           where: {
-               id: In(tagIds),
-           }
-       })
-       post.title !== title  &&  (post.title = title);
-       post.cover !== cover  &&  (post.cover = cover);
-       post.body !== body  &&  (post.body = body);
-       post.tags !== tags  &&  (post.tags = tags);
-       await postRepository.save(post);
+   
+       video.title !== title  &&  (video.title = title);
+       video.cover !== cover  &&  (video.cover = cover);
+       video.body !== body  &&  (video.body = body);
+       video.address !== address  &&  (video.tags = address);
+       video.isPublished=== isPublished? video.isPublished = isPublished: video.isPublished=false;
+       await videoRepository.save(video);
        ctx.rest({
-        data: post,
-         id: post.id,
+        data: video,
+         id: video.id,
         })
     }
 }
