@@ -82,7 +82,7 @@ export default class App {
             binanceService.storePirces(this.io);
             binanceService.staticPrices(this.io);
             binanceService.listenAutoTrade(this.io);
-        //    seed;
+        //    seed
            const roleService = new RoleService(connection);
            await roleService.findOrCreateNobody();
            await roleService.findOrCreateAdmin();

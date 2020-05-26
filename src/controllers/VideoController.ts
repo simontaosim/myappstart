@@ -106,7 +106,7 @@ export default class VideoController {
        video.cover !== cover  &&  (video.cover = cover);
        video.body !== body  &&  (video.body = body);
        video.address !== address  &&  (video.tags = address);
-       video.isPublished=== isPublished? video.isPublished = isPublished: video.isPublished=false;
+       video.isPublished = isPublished;
        if(cateId){
         const cateRepository = ctx.DBConnection.getRepository(VideoCategory);
         const cate = await cateRepository.findOne(cateId);
